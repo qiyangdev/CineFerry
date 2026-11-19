@@ -23,37 +23,16 @@ struct QuickConnectView: View {
     let action: (String) async -> Void
 
     @ContentBuilder
-    private func pollingView(code: String) -> some View {
-        VStack(spacing: 20) {
-            BulletedList(spacing: 16) {
-                Text(L10n.quickConnectStep1)
-
-                Text(L10n.quickConnectStep2)
-
-                Text(L10n.quickConnectStep3)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            Text(code)
-                .tracking(10)
-                .font(.largeTitle)
-                .monospacedDigit()
-        }
-        .frame(
-            maxWidth: .infinity,
-            maxHeight: .infinity,
-            alignment: .top
-        )
-        .edgePadding()
-    }
-
-    @ContentBuilder
     var body: some View {
         ZStack {
             if let error {
                 ErrorView(error: error)
             } else if let code {
-                pollingView(code: code)
+                PairingCodeView(code: code) {
+                    Text(L10n.quickConnectStep1)
+                    Text(L10n.quickConnectStep2)
+                    Text(L10n.quickConnectStep3)
+                }
             } else {
                 ProgressView()
             }

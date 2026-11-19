@@ -29,6 +29,14 @@ extension NavigationRoute {
         }
     }
 
+    #if os(tvOS) && canImport(EmbyAPI)
+    static var embyConnect: NavigationRoute {
+        NavigationRoute(id: "embyConnect", style: .sheet) {
+            EmbyConnectView()
+        }
+    }
+    #endif
+
     #if os(iOS)
     // TODO: rename to `localUserAccessPolicy`
     static func userSecurity(pinHint: Binding<String>, accessPolicy: Binding<LocalUserAccessPolicy>) -> NavigationRoute {

@@ -12,8 +12,8 @@ import SwiftUI
 
 struct EmbyConnectView: View {
 
-    @Environment(\.dismiss)
-    private var dismiss
+    @Router
+    private var router
 
     @Environment(\.localUserAuthenticationAction)
     private var authenticate
@@ -21,8 +21,6 @@ struct EmbyConnectView: View {
     @Injected(\.userSessionManager)
     private var userSessionManager: UserSessionManager
 
-    @State
-    private var attempt = 0
     @State
     private var pin: EmbyConnect.PIN?
     @State
@@ -34,62 +32,34 @@ struct EmbyConnectView: View {
     @State
     private var message: String?
 
-    let onSignedIn: () -> Void
-
     @ContentBuilder
     var body: some View {
-        VStack(spacing: 24) {
-            Text(L10n.embyConnect)
-                .font(.title)
-
+        ZStack {
             if let account {
-                if servers.isEmpty {
-                    Text(L10n.embyConnectNoServers)
-                } else {
-                    Text(L10n.embyConnectChooseServer)
-                    ScrollView {
-                        VStack {
-                            ForEach(servers) { server in
-                                Button(server.name) { selectedServer = server }
-                                    .disabled(selectedServer != nil)
-                            }
-                        }
-                        .padding(24)
-                    }
-                    .frame(maxHeight: 320)
-                }
+                EmbyConnectServerList(
+                    servers: servers,
+                    isSigningIn: selectedServer != nil,
+                    message: message,
+                    onSelect: { selectedServer = $0 }
+                )
+                .task(id: selectedServer?.id) {
+                    guard let selectedServer else { return }
 
-                if selectedServer != nil {
-                    ProgressView()
+                    await signIn(to: selectedServer, account: account)
                 }
-                if let message {
-                    Text(message)
-                }
-                Button(L10n.embyConnectNewCode) { attempt += 1 }
-                    .disabled(selectedServer != nil)
-                    .task(id: selectedServer?.id) {
-                        guard let selectedServer else { return }
-
-                        await signIn(to: selectedServer, account: account)
-                    }
             } else if let message {
-                Text(message)
-                Button(L10n.retry) { attempt += 1 }
+                ErrorView(error: ErrorMessage(message))
             } else if let pin {
-                Text(L10n.embyConnectInstructions)
-                Text(pin.pin)
-                    .font(.largeTitle.monospaced())
-                    .accessibilityIdentifier("embyConnectPIN")
-                Button(L10n.embyConnectNewCode) { attempt += 1 }
+                PairingCodeView(code: pin.pin) {
+                    Text(L10n.embyConnectInstructions)
+                }
             } else {
                 ProgressView()
             }
-
-            Button(L10n.cancel, role: .cancel) { dismiss() }
         }
-        .multilineTextAlignment(.center)
-        .padding(48)
-        .task(id: attempt) { await connect() }
+        .edgePadding()
+        .navigationTitle(L10n.embyConnect)
+        .task { await connect() }
     }
 
     private func connect() async {
@@ -186,13 +156,53 @@ struct EmbyConnectView: View {
                 StoredValues[.User.users] = StoredValues[.User.users].appending(user)
             }
             try await userSessionManager.signIn(userID: id)
-            onSignedIn()
-            dismiss()
+            router.dismiss()
         } catch {
             if !Task.isCancelled {
                 message = (error as? ErrorMessage)?.localizedDescription ?? L10n.embyConnectServerUnavailable
             }
         }
+    }
+}
+
+private struct EmbyConnectServerList: View {
+
+    let servers: [EmbyConnect.LinkedServer]
+    let isSigningIn: Bool
+    let message: String?
+    let onSelect: (EmbyConnect.LinkedServer) -> Void
+
+    @ContentBuilder
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            if servers.isEmpty {
+                Text(L10n.embyConnectNoServers)
+            } else {
+                Text(L10n.embyConnectChooseServer)
+                    .font(.headline)
+
+                ScrollView {
+                    VStack(spacing: 16) {
+                        ForEach(servers) { server in
+                            ConnectToServerView.ServerConnectionButton(name: server.name) {
+                                onSelect(server)
+                            }
+                        }
+                    }
+                    .padding(16)
+                }
+                .disabled(isSigningIn)
+            }
+
+            if isSigningIn {
+                ProgressView()
+            }
+            if let message {
+                Text(message)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .edgePadding()
     }
 }
 #endif

@@ -662,18 +662,16 @@ internal enum L10n {
   internal static let embyConnect = L10n.tr("Localizable", "embyConnect", fallback: "Emby Connect")
   /// Choose an Emby server
   internal static let embyConnectChooseServer = L10n.tr("Localizable", "embyConnectChooseServer", fallback: "Choose an Emby server")
-  /// This code has expired. Get a new code to sign in.
-  internal static let embyConnectExpired = L10n.tr("Localizable", "embyConnectExpired", fallback: "This code has expired. Get a new code to sign in.")
+  /// This code has expired. Go back and open Emby Connect again.
+  internal static let embyConnectExpired = L10n.tr("Localizable", "embyConnectExpired", fallback: "This code has expired. Go back and open Emby Connect again.")
   /// On a phone or computer, visit emby.media/pin and enter this code.
   internal static let embyConnectInstructions = L10n.tr("Localizable", "embyConnectInstructions", fallback: "On a phone or computer, visit emby.media/pin and enter this code.")
-  /// Get a new code
-  internal static let embyConnectNewCode = L10n.tr("Localizable", "embyConnectNewCode", fallback: "Get a new code")
   /// No servers are linked to this Emby Connect account.
   internal static let embyConnectNoServers = L10n.tr("Localizable", "embyConnectNoServers", fallback: "No servers are linked to this Emby Connect account.")
   /// Could not sign in to the selected Emby server.
   internal static let embyConnectServerUnavailable = L10n.tr("Localizable", "embyConnectServerUnavailable", fallback: "Could not sign in to the selected Emby server.")
-  /// Could not connect to Emby Connect. Try again.
-  internal static let embyConnectUnavailable = L10n.tr("Localizable", "embyConnectUnavailable", fallback: "Could not connect to Emby Connect. Try again.")
+  /// Could not connect to Emby Connect. Go back and try again.
+  internal static let embyConnectUnavailable = L10n.tr("Localizable", "embyConnectUnavailable", fallback: "Could not connect to Emby Connect. Go back and try again.")
   /// Enable all devices
   internal static let enableAllDevices = L10n.tr("Localizable", "enableAllDevices", fallback: "Enable all devices")
   /// Enable all libraries

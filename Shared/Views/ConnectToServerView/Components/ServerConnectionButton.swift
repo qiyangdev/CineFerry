@@ -12,12 +12,13 @@ import SwiftUI
 
 extension ConnectToServerView {
 
-    struct LocalServerButton: View {
+    struct ServerConnectionButton: View {
 
         @AdaptiveLayout
         private var viewLayout
 
-        let server: ServerState
+        let name: String
+        var address: String?
         let action: () -> Void
 
         @ContentBuilder
@@ -25,13 +26,15 @@ extension ConnectToServerView {
             Button(action: action) {
                 HStack {
                     VStack(alignment: .leading) {
-                        Text(server.name)
+                        Text(name)
                             .font(.headline)
                             .fontWeight(.semibold)
 
-                        Text(server.currentURL.absoluteString)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                        if let address {
+                            Text(address)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 

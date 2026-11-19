@@ -29,13 +29,6 @@ struct ConnectToServerView: View {
     @StateObject
     private var viewModel = ConnectToServerViewModel()
 
-    #if os(tvOS) && canImport(EmbyAPI)
-    @State
-    private var showingEmbyConnect = false
-    @State
-    private var signedInWithEmbyConnect = false
-    #endif
-
     private let timer = Timer.publish(every: 12, on: .main, in: .common).autoconnect()
 
     private func onEvent(_ event: ConnectToServerViewModel._Event) {
@@ -121,7 +114,7 @@ struct ConnectToServerView: View {
                     .frame(maxWidth: .infinity)
             } else {
                 ForEach(viewModel.localServers) { server in
-                    LocalServerButton(server: server) {
+                    ServerConnectionButton(name: server.name, address: server.currentURL.absoluteString) {
                         url = server.currentURL.absoluteString
                         viewModel.connect(url: server.currentURL.absoluteString)
                     }
@@ -148,10 +141,18 @@ struct ConnectToServerView: View {
         ) {
             connectSection
             #if canImport(EmbyAPI)
-            Button(L10n.embyConnect) {
+            Button {
                 isURLFocused = false
-                showingEmbyConnect = true
+                router.route(to: .embyConnect)
+            } label: {
+                Text(L10n.embyConnect)
+                    .frame(maxWidth: .infinity)
             }
+            .fontWeight(.semibold)
+            .backport
+            .buttonStyle(.glassProminent.shadow(false))
+            .tint(theme.accentColor)
+            .frame(maxHeight: 75)
             .disabled(viewModel.state == .connecting)
             #endif
         } trailingContentView: {
@@ -189,15 +190,6 @@ struct ConnectToServerView: View {
                     router.dismiss()
                 }
             }
-            #if os(tvOS) && canImport(EmbyAPI)
-            .sheet(isPresented: $showingEmbyConnect, onDismiss: {
-                if signedInWithEmbyConnect {
-                    router.dismiss()
-                }
-            }) {
-                EmbyConnectView { signedInWithEmbyConnect = true }
-            }
-            #endif
             .errorMessage($viewModel.error)
     }
 }
