@@ -4,7 +4,7 @@ CineFerry is a media client for Jellyfin and Emby. It is based on [Swiftfin](htt
 
 | Platform | Minimum OS | Server support |
 | --- | --- | --- |
-| iOS | 18.6 | Jellyfin and Emby |
+| iOS | 26.1 | Jellyfin and Emby |
 | tvOS | 26.1 | Jellyfin and Emby |
 
 The iOS and tvOS baselines cover sign-in, opening a library item, playback, closing the player, and resuming after a cold launch. The iOS baseline also covers switching Emby playback from Auto to a 420 kbps cap. Jellyfin and Emby support different administrative and authentication features.

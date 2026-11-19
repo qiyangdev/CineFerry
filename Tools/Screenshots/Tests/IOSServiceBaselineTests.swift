@@ -82,24 +82,16 @@ final class IOSServiceBaselineTests: XCTestCase {
         try openPlayer(for: configuration.title, in: app)
         let initial = try playbackTime(in: app, atLeast: 1, phase: "Auto start")
         let auto = try playbackTime(in: app, atLeast: initial + 8, phase: "Auto advancement")
-        try requireAutoQuality(in: app)
+        try checkPlaybackQuality(L10n.auto, switchingTo: service == .emby ? cappedQuality : nil, in: app)
         print("BASELINE \(service.rawValue) Auto \(initial) -> \(auto) seconds")
 
         var lastPlayed = auto
         if service == .emby {
-            try chooseQuality(cappedQuality, in: app)
             print("BASELINE \(service.rawValue) selected 420 kbps")
             let cappedStart = try playbackTime(in: app, atLeast: 1, phase: "420 kbps start")
             lastPlayed = try playbackTime(in: app, atLeast: cappedStart + 8, phase: "420 kbps advancement")
-            let selected = try openPlaybackQuality(in: app)
-            guard selected == cappedQuality else {
-                throw PlaybackFailure("The player did not retain the 420 kbps selection.")
-            }
-
-            try chooseQuality(cappedQuality, in: app)
+            try checkPlaybackQuality(cappedQuality, in: app)
             print("BASELINE \(service.rawValue) 420 kbps \(cappedStart) -> \(lastPlayed) seconds")
-        } else {
-            try chooseQuality(L10n.auto, in: app)
         }
 
         let stopped = try stopPlayer(in: app, fallbackTime: lastPlayed)
@@ -115,8 +107,7 @@ final class IOSServiceBaselineTests: XCTestCase {
         }
 
         let advancing = try playbackTime(in: app, atLeast: resumed + 3, phase: "Cold resume advancement")
-        try requireAutoQuality(in: app)
-        try chooseQuality(L10n.auto, in: app)
+        try checkPlaybackQuality(L10n.auto, in: app)
         _ = try stopPlayer(in: app, fallbackTime: advancing)
         print("BASELINE \(service.rawValue) stopped \(stopped)s, cold resume \(resumed) -> \(advancing) seconds")
     }
@@ -274,20 +265,13 @@ final class IOSServiceBaselineTests: XCTestCase {
     }
 
     @MainActor
-    private func requireAutoQuality(in app: XCUIApplication) throws {
-        let selected = try openPlaybackQuality(in: app)
-        guard selected == L10n.auto else {
-            throw PlaybackFailure("The player did not start with Auto quality.")
-        }
-    }
-
-    @MainActor
-    private func openPlaybackQuality(in app: XCUIApplication) throws -> String? {
+    private func checkPlaybackQuality(_ expected: String, switchingTo newQuality: String? = nil, in app: XCUIApplication) throws {
         showControls(in: app)
         let menu = app.buttons[L10n.menu].firstMatch
         let playback = menuElements(labeled: L10n.playback, in: app)
         if !canTap(playback.firstMatch, in: app) {
-            guard waitForHittable(menu, in: app, timeout: 6) else { throw PlaybackFailure("The player menu did not open.") }
+            guard waitForHittable(menu, in: app, timeout: 12, revealPlayerControls: true)
+            else { throw PlaybackFailure("The player menu did not open.") }
 
             menu.tap()
         }
@@ -303,18 +287,22 @@ final class IOSServiceBaselineTests: XCTestCase {
         }
 
         let description = [quality.value as? String, quality.label].compactMap(\.self).joined(separator: " ")
-        quality.tap()
-
-        return [L10n.auto, cappedQuality].first { choice in
-            let option = menuElements(labeled: choice, in: app).firstMatch
-            return description.localizedCaseInsensitiveContains(choice) ||
-                (option.exists && (option.isSelected || option.value as? String == "1"))
+        guard description.localizedCaseInsensitiveContains(expected) else {
+            throw PlaybackFailure("Expected playback quality \(expected), found \(description).")
         }
-    }
+        guard let newQuality else {
+            // Dismiss the menu without activating the picker or reselecting the current value.
+            app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.05, dy: 0.5)).tap()
+            guard quality.waitForNonExistence(timeout: 6) else {
+                throw PlaybackFailure("The Playback submenu did not close.")
+            }
 
-    @MainActor
-    private func chooseQuality(_ quality: String, in app: XCUIApplication) throws {
-        let option = menuElements(labeled: quality, in: app).firstMatch
+            return
+        }
+
+        // On iOS 26.1, XCTest can lose the SwiftUI picker during element-based activation.
+        try tapCenter(of: quality, in: app)
+        let option = menuElements(labeled: newQuality, in: app).firstMatch
         guard waitForHittable(option, in: app, timeout: 8) else {
             throw PlaybackFailure("The requested playback quality was unavailable.")
         }
@@ -385,11 +373,19 @@ final class IOSServiceBaselineTests: XCTestCase {
     }
 
     @MainActor
-    private func waitForHittable(_ element: XCUIElement, in app: XCUIApplication, timeout: TimeInterval) -> Bool {
+    private func waitForHittable(
+        _ element: XCUIElement,
+        in app: XCUIApplication,
+        timeout: TimeInterval,
+        revealPlayerControls: Bool = false
+    ) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         repeat {
             if canTap(element, in: app) {
                 return true
+            }
+            if revealPlayerControls {
+                showControls(in: app)
             }
             RunLoop.current.run(until: Date().addingTimeInterval(0.4))
         } while Date() < deadline

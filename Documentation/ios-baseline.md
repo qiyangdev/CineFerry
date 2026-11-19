@@ -53,4 +53,4 @@ The tests verify that playback time advances, the player closes to the item deta
 
 ## Verified environment
 
-Both cases passed on iOS 27.2 with Jellyfin 12.4.0 and Emby 4.10.2.0. The Emby server reported video re-encoding at a 420 kbps total target. The built iOS app declares a minimum OS of 18.6. Runtime validation on iOS 18.6 still requires a compatible device or simulator image.
+Both cases passed on iOS 26.1 (iPhone 17 Pro simulator) and iOS 27.2 with Jellyfin 12.4.0 and Emby 4.10.2.0. The Emby server reported video re-encoding at a 420 kbps total target. The built iOS app declares a minimum OS of 26.1.
