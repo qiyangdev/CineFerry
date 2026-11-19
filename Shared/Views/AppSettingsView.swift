@@ -59,7 +59,7 @@ struct AppSettingsView: View {
 
     @ContentBuilder
     var body: some View {
-        Form(image: .jellyfinBlobBlue) {
+        Form(image: .cineferryMark) {
             Section(L10n.cineFerry) {
                 ChevronButton(L10n.aboutApp) {
                     router.route(to: .aboutApp)
@@ -67,24 +67,14 @@ struct AppSettingsView: View {
             }
 
             #if os(iOS)
-            Section(L10n.customize) {
-                ChevronButton(L10n.appIcon) {
-                    router.route(to: .appIconSelector)
-                }
-
-                if !selectUserUseSplashscreen {
+            if !selectUserUseSplashscreen {
+                Section(L10n.customize) {
                     Picker(
                         L10n.appearance,
                         selection: $appearance
                     )
                 }
             }
-            #else
-            // Section(L10n.customize) {
-            //     ChevronButton(L10n.appIcon) {
-            //         router.route(to: .appIconSelector)
-            //     }
-            // }
             #endif
 
             Section {

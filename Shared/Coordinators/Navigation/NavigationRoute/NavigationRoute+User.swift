@@ -30,9 +30,12 @@ extension NavigationRoute {
     }
 
     #if os(tvOS) && canImport(EmbyAPI)
-    static var embyConnect: NavigationRoute {
+    static func embyConnect(
+        server: ServerState,
+        action: @escaping (AuthenticationResult) throws -> Void
+    ) -> NavigationRoute {
         NavigationRoute(id: "embyConnect", style: .sheet) {
-            EmbyConnectView()
+            EmbyConnectView(server: server, action: action)
         }
     }
     #endif

@@ -18,17 +18,10 @@ enum EmbyConnect {
         let deviceId: String
     }
 
-    struct LinkedServer: Decodable, Identifiable {
+    struct LinkedServer: Decodable {
 
         let systemId: String
-        let name: String
         let accessKey: String
-        let localAddress: String?
-        let url: String?
-
-        var id: String {
-            systemId
-        }
     }
 
     struct Account: Decodable {
@@ -112,51 +105,28 @@ enum EmbyConnect {
 
     static func signIn(
         to server: LinkedServer,
+        at url: URL,
         account: Account
-    ) async throws -> (URL, PublicSystemInfo, AuthenticationResult) {
-        var lastError: Error = URLError(.badURL)
-        // Keep the hosted and LAN addresses as independent candidates, including reverse-proxy prefixes.
-        for address in [server.url, server.localAddress].compactMap(\.self) {
-            guard let url = URL(string: address)?.normalizedServerConnectionURL,
-                  let host = url.host,
-                  !host.isEmpty,
-                  ["http", "https"].contains(url.scheme ?? ""),
-                  url.user == nil,
-                  url.password == nil,
-                  url.query == nil,
-                  url.fragment == nil
-            else { continue }
+    ) async throws -> AuthenticationResult {
+        let info = try await EmbyServer.probe(url)
+        guard info.id == server.systemId else { throw ErrorMessage(L10n.connectionServerMismatch) }
 
-            let candidates = url.lastPathComponent.lowercased() == "emby" ? [url] : [url, url.appending(component: "emby")]
-            for candidate in candidates {
-                do {
-                    let info = try await EmbyServer.probe(candidate)
-                    guard info.id == server.systemId else { throw ErrorMessage(L10n.connectionServerMismatch) }
+        var exchange = URLRequest(url: url.appending(path: "Connect/Exchange").appending(queryItems: [
+            .init(name: "format", value: "json"),
+            .init(name: "ConnectUserId", value: account.userId),
+        ]))
+        exchange.timeoutInterval = 8
+        try EmbyServer.client(url: url).authenticate(&exchange)
+        exchange.setValue(server.accessKey, forHTTPHeaderField: "X-Emby-Token")
+        let token: ServerToken = try await send(exchange)
+        guard !token.localUserId.isEmpty, !token.accessToken.isEmpty else { throw URLError(.cannotParseResponse) }
 
-                    var exchange = URLRequest(url: candidate.appending(path: "Connect/Exchange").appending(queryItems: [
-                        .init(name: "format", value: "json"),
-                        .init(name: "ConnectUserId", value: account.userId),
-                    ]))
-                    exchange.timeoutInterval = 8
-                    try EmbyServer.client(url: candidate).authenticate(&exchange)
-                    exchange.setValue(server.accessKey, forHTTPHeaderField: "X-Emby-Token")
-                    let token: ServerToken = try await send(exchange)
-                    guard !token.localUserId.isEmpty, !token.accessToken.isEmpty else { throw URLError(.cannotParseResponse) }
-
-                    let user = try await EmbyServer.authenticatedUser(
-                        at: candidate,
-                        userID: token.localUserId,
-                        accessToken: token.accessToken,
-                        serverID: server.systemId
-                    )
-                    return (candidate, info, user)
-                } catch {
-                    try Task.checkCancellation()
-                    lastError = error
-                }
-            }
-        }
-        throw lastError
+        return try await EmbyServer.authenticatedUser(
+            at: url,
+            userID: token.localUserId,
+            accessToken: token.accessToken,
+            serverID: server.systemId
+        )
     }
 
     private static func cloud<T: Decodable>(

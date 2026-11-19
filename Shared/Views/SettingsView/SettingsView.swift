@@ -42,7 +42,7 @@ struct SettingsView: View {
 
     @ContentBuilder
     var body: some View {
-        Form(image: .jellyfinBlobBlue) {
+        Form(image: .cineferryMark) {
             serverSection
             customizeSection
             diagnosticsSection

@@ -151,6 +151,10 @@ final class UserSignInViewModel: ObservableObject {
         response = try await server.client.signIn(username: username, password: normalizedPassword)
         #endif
 
+        try handleSignInResponse(response)
+    }
+
+    func handleSignInResponse(_ response: AuthenticationResult) throws {
         guard let accessToken = response.accessToken,
               let userData = response.user,
               let id = userData.id,

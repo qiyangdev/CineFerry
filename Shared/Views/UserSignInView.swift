@@ -238,6 +238,29 @@ struct UserSignInView: View {
             }
         }
 
+        #if os(tvOS) && canImport(EmbyAPI)
+        if user == nil, viewModel.server.isEmby {
+            Section {
+                Button {
+                    focusedTextField = nil
+                    router.route(to: .embyConnect(server: viewModel.server) { response in
+                        try viewModel.handleSignInResponse(response)
+                    })
+                } label: {
+                    Text(L10n.embyConnect)
+                        .frame(maxWidth: .infinity)
+                }
+                .listRowInsets(.zero)
+                .listRowBackground(Color.clear)
+                .fontWeight(.semibold)
+                .backport
+                .buttonStyle(.glassProminent.shadow(false))
+                .tint(.jellyfinPurple)
+                .disabled(viewModel.state == .signingIn)
+            }
+        }
+        #endif
+
         if let disclaimer = viewModel.serverDisclaimer {
             Section(L10n.disclaimer) {
                 Text(disclaimer.markdown)

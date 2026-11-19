@@ -394,6 +394,8 @@ internal enum L10n {
   internal static let confirmPassword = L10n.tr("Localizable", "confirmPassword", fallback: "Confirm password")
   /// Connect
   internal static let connect = L10n.tr("Localizable", "connect", fallback: "Connect")
+  /// Connect by URL - Connect to the media server at the entered URL.
+  internal static let connectByURL = L10n.tr("Localizable", "connectByURL", fallback: "Connect by URL")
   /// Connection
   internal static let connection = L10n.tr("Localizable", "connection", fallback: "Connection")
   /// Connection already exists
@@ -668,6 +670,8 @@ internal enum L10n {
   internal static let embyConnectInstructions = L10n.tr("Localizable", "embyConnectInstructions", fallback: "On a phone or computer, visit emby.media/pin and enter this code.")
   /// No servers are linked to this Emby Connect account.
   internal static let embyConnectNoServers = L10n.tr("Localizable", "embyConnectNoServers", fallback: "No servers are linked to this Emby Connect account.")
+  /// This Emby Connect account is not linked to the selected server.
+  internal static let embyConnectServerNotLinked = L10n.tr("Localizable", "embyConnectServerNotLinked", fallback: "This Emby Connect account is not linked to the selected server.")
   /// Could not sign in to the selected Emby server.
   internal static let embyConnectServerUnavailable = L10n.tr("Localizable", "embyConnectServerUnavailable", fallback: "Could not sign in to the selected Emby server.")
   /// Could not connect to Emby Connect. Go back and try again.

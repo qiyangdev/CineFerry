@@ -82,8 +82,13 @@ struct ConnectToServerView: View {
                 isURLFocused = false
                 viewModel.connect(url: url)
             } label: {
+                #if os(tvOS)
+                Text(L10n.connectByURL)
+                    .frame(maxWidth: .infinity)
+                #else
                 Text(L10n.connect)
                     .frame(maxWidth: .infinity)
+                #endif
             }
             .listRowInsets(.zero)
             .listRowBackground(Color.clear)
@@ -140,21 +145,6 @@ struct ConnectToServerView: View {
             isLoading: viewModel.state == .connecting
         ) {
             connectSection
-            #if canImport(EmbyAPI)
-            Button {
-                isURLFocused = false
-                router.route(to: .embyConnect)
-            } label: {
-                Text(L10n.embyConnect)
-                    .frame(maxWidth: .infinity)
-            }
-            .fontWeight(.semibold)
-            .backport
-            .buttonStyle(.glassProminent.shadow(false))
-            .tint(theme.accentColor)
-            .frame(maxHeight: 75)
-            .disabled(viewModel.state == .connecting)
-            #endif
         } trailingContentView: {
             localServersSection
         }

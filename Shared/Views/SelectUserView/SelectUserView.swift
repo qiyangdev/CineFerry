@@ -328,7 +328,7 @@ struct SelectUserView: View {
         }
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Image(.jellyfinBlobBlue)
+                Image(.cineferryMark)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: viewLayout.value(standard: 30, large: 100))
