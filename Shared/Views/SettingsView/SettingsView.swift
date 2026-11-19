@@ -73,6 +73,7 @@ struct SettingsView: View {
                 ) {
                     Label {
                         Text(userSession.server.name)
+                            .lineLimit(1)
                     } icon: {
                         if !userSession.server.isVersionCompatible {
                             Image(systemName: "exclamationmark.circle.fill")
