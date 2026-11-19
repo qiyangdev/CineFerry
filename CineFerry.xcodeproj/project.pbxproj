@@ -1660,7 +1660,7 @@
 			repositoryURL = "https://github.com/qiyangdev/EmbyAPI.git";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.2.0;
+				minimumVersion = 0.3.0;
 			};
 		};
 		E192608128D2D0DB002314B4 /* XCRemoteSwiftPackageReference "Factory" */ = {

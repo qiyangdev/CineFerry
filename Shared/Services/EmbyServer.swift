@@ -93,6 +93,11 @@ enum EmbyServer {
         return try response.ok.body.json.map(convertUser)
     }
 
+    static func loginDisclaimer(at url: URL) async throws -> String? {
+        let response = try await client(url: url).api.getBrandingConfiguration()
+        return try response.ok.body.json.LoginDisclaimer
+    }
+
     static func playbackInfo(
         _ body: PlaybackInfoDto,
         itemID: String,

@@ -614,8 +614,8 @@ internal enum L10n {
   internal static let disc = L10n.tr("Localizable", "disc", fallback: "Disc")
   /// Square disc art representing physical media like CDs, DVDs, or Blu-rays. Commonly used for music albums and movie collections.
   internal static let discImageDescription = L10n.tr("Localizable", "discImageDescription", fallback: "Square disc art representing physical media like CDs, DVDs, or Blu-rays. Commonly used for music albums and movie collections.")
-  /// Disclaimer
-  internal static let disclaimer = L10n.tr("Localizable", "disclaimer", fallback: "Disclaimer")
+  /// Server Notice
+  internal static let disclaimer = L10n.tr("Localizable", "disclaimer", fallback: "Server Notice")
   /// Dismiss
   internal static let dismiss = L10n.tr("Localizable", "dismiss", fallback: "Dismiss")
   /// Display order
