@@ -7,16 +7,17 @@
 //
 
 import FactoryKit
+import Foundation
 import Logging
 
 extension Logger {
 
-    static func swiftfin() -> Logger {
-        Logger(label: "org.jellyfin.swiftfin")
+    static func cineFerry() -> Logger {
+        Logger(label: Bundle.main.bundleIdentifier ?? "dev.qiyang.mediaclient")
     }
 }
 
-struct SwiftfinConsoleHandler: LogHandler {
+struct CineFerryConsoleHandler: LogHandler {
 
     var logLevel: Logger.Level = .trace
     var metadata: Logger.Metadata = [:]

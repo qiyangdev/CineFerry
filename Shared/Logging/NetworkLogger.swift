@@ -10,11 +10,11 @@ import Foundation
 import JellyfinAPI
 import Pulse
 
-private let redactedMessage = "<Redacted by Swiftfin>"
+private let redactedMessage = "<Redacted by CineFerry>"
 
 extension NetworkLogger {
 
-    static func swiftfin() -> NetworkLogger {
+    static func cineFerry() -> NetworkLogger {
         var configuration = NetworkLogger.Configuration()
 
         configuration.willHandleEvent = { event -> LoggerStore.Event? in

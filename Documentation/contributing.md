@@ -9,11 +9,13 @@
 
 ## Setup
 
-Fork the Swiftfin repo and install the necessary dependencies:
+Install the dependencies from the CineFerry repository root.
 
 ```bash
 $ brew bundle --file Brewfile
 ```
+
+Open `CineFerry.xcodeproj` and select the `CineFerry` scheme for iOS or `CineFerry tvOS` for tvOS.
 
 In the event that all of the Swift Packages cannot be installed, clean the Swift Packages cache or close and reopen Xcode to restart the process.
 
@@ -25,24 +27,24 @@ Create the `XcodeConfig/DevelopmentTeam.xcconfig` file [through Xcode](https://d
 
 ```
 DEVELOPMENT_TEAM = ""
-PRODUCT_BUNDLE_IDENTIFIER = org.jellyfin.swiftfin
+PRODUCT_BUNDLE_IDENTIFIER = dev.qiyang.mediaclient
 ```
 
 Update the `DEVELOPMENT_TEAM` value with your Team ID. This can be found by:
 - Setting the `Development Team` value under the `Signing & Capabilities` tab in Xcode and get the value from source control. Make sure to discard this change.
 - Logging into your Apple Developer account and [view your membership details](https://developer.apple.com/account/#/membership). It will be listed next to `Team ID`.
 
-You can change the `PRODUCT_BUNDLE_IDENTIFIER` value to have multiple builds of Swiftfin on your devices or for provisioning purposes.
+You can change the `PRODUCT_BUNDLE_IDENTIFIER` value to have multiple builds of CineFerry on your devices or for provisioning purposes.
 
 `DevelopmentTeam.xcconfig` is already added to the `.gitignore`.
 
 ### Xcode Version
 
-Swiftfin is built using the Xcode version pinned in our [CI workflow](https://github.com/jellyfin/Swiftfin/blob/main/.github/workflows/ci.yml#L27). This is the recommended version of Xcode for development.
+CineFerry is built using the Xcode version pinned in the [CI workflow](../.github/workflows/ci.yml). This is the recommended version of Xcode for development.
 
 ### Testing
 
-Swiftfin can be tested using Xcode's built-in Simulator or on real hardware. See Apple's guide on [Running your app in Simulator or on a device](https://developer.apple.com/documentation/xcode/running-your-app-in-simulator-or-on-a-device/) for instructions on both approaches.
+CineFerry can be tested using Xcode's built-in Simulator or on real hardware. See Apple's guide on [Running your app in Simulator or on a device](https://developer.apple.com/documentation/xcode/running-your-app-in-simulator-or-on-a-device/) for instructions on both approaches.
 
 > **Note:** Some functionality behaves differently between the Simulator and real devices, including picture-in-picture, device storage, and local network access. In these scenarios, it is recommended to test code changes on real hardware to ensure correct behavior.
 

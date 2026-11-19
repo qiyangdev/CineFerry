@@ -79,8 +79,13 @@ struct ConnectToServerView: View {
                 isURLFocused = false
                 viewModel.connect(url: url)
             } label: {
+                #if os(tvOS)
+                Text(L10n.connectByURL)
+                    .frame(maxWidth: .infinity)
+                #else
                 Text(L10n.connect)
                     .frame(maxWidth: .infinity)
+                #endif
             }
             .listRowInsets(.zero)
             .listRowBackground(Color.clear)
@@ -111,7 +116,7 @@ struct ConnectToServerView: View {
                     .frame(maxWidth: .infinity)
             } else {
                 ForEach(viewModel.localServers) { server in
-                    LocalServerButton(server: server) {
+                    ServerConnectionButton(name: server.name, address: server.currentURL.absoluteString) {
                         url = server.currentURL.absoluteString
                         viewModel.connect(url: server.currentURL.absoluteString)
                     }

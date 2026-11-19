@@ -10,6 +10,9 @@ import Combine
 import Foundation
 import JellyfinAPI
 import Pulse
+#if canImport(EmbyAPI)
+import struct EmbyAPI.EmbyClient
+#endif
 
 final class UserSession {
 
@@ -45,6 +48,13 @@ final class UserSession {
     @MainActor
     private var cachedClient: JellyfinClient?
 
+    #if canImport(EmbyAPI)
+    @MainActor
+    func makeEmbyClient() throws -> EmbyClient {
+        try EmbyServer.client(url: server.effectiveServerURL, userID: user.id, accessToken: user.accessToken)
+    }
+    #endif
+
     @MainActor
     var client: JellyfinClient {
         let url = server.effectiveServerURL
@@ -55,15 +65,38 @@ final class UserSession {
 
         // Connection changes replace only the transport, never the user session
         // or the item store retained by views and playback.
-        let client = JellyfinClient(
-            configuration: .swiftfinConfiguration(url: url, accessToken: user.accessToken),
-            sessionConfiguration: .swiftfin,
-            sessionDelegate: URLSessionProxyDelegate(logger: NetworkLogger.swiftfin())
-        )
+        let configuration = JellyfinClient.Configuration.cineFerryConfiguration(url: url, accessToken: user.accessToken)
+        let client: JellyfinClient
+        #if canImport(EmbyAPI)
+        if server.isEmby {
+            let delegate = EmbyRequestAdapter(
+                client: Result { try makeEmbyClient() },
+                userID: user.id
+            )
+            client = JellyfinClient(
+                configuration: configuration,
+                delegate: delegate,
+                sessionConfiguration: .cineFerry,
+                sessionDelegate: EmbyAPIRedirectDelegate()
+            )
+        } else {
+            client = makeJellyfinClient(configuration: configuration)
+        }
+        #else
+        client = makeJellyfinClient(configuration: configuration)
+        #endif
 
         cachedClient = client
 
         return client
+    }
+
+    private func makeJellyfinClient(configuration: JellyfinClient.Configuration) -> JellyfinClient {
+        JellyfinClient(
+            configuration: configuration,
+            sessionConfiguration: .cineFerry,
+            sessionDelegate: URLSessionProxyDelegate(logger: NetworkLogger.cineFerry())
+        )
     }
 
     @MainActor
@@ -72,10 +105,9 @@ final class UserSession {
     lazy var serverSocketManager = ServerSocketManager()
 
     @MainActor
-    private lazy var services: [any UserSessionService] = [
-        serverConnectionManager,
-        serverSocketManager,
-    ]
+    private lazy var services: [any UserSessionService] = server.isEmby
+        ? [serverConnectionManager]
+        : [serverConnectionManager, serverSocketManager]
 
     init(
         server: ServerState,

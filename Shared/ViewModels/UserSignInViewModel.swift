@@ -99,7 +99,7 @@ final class UserSignInViewModel: ObservableObject {
     @Published
     private(set) var serverDisclaimer: String? = nil
 
-    private let logger = Logger.swiftfin()
+    private let logger = Logger.cineFerry()
     private var cancellables = Set<AnyCancellable>()
 
     let server: ServerState
@@ -110,13 +110,21 @@ final class UserSignInViewModel: ObservableObject {
 
     @Function(\Action.Cases.getPublicData)
     private func _getPublicData() async throws {
+        #if canImport(EmbyAPI)
+        if server.isEmby {
+            async let disclaimer = try? EmbyServer.loginDisclaimer(at: server.effectiveServerURL)
+            self.publicUsers = try await EmbyServer.publicUsers(at: server.effectiveServerURL)
+            self.serverDisclaimer = await normalizedServerDisclaimer(disclaimer)
+            return
+        }
+        #endif
         async let isQuickConnectEnabled = try retrieveIsQuickConnectEnabled()
         async let publicUsers = try retrievePublicUsers()
-        async let serverDisclaimer = try retrieveServerDisclaimer()
+        async let serverDisclaimer = try? retrieveServerDisclaimer()
 
         self.isQuickConnectEnabled = try await isQuickConnectEnabled
         self.publicUsers = try await publicUsers
-        self.serverDisclaimer = try await serverDisclaimer
+        self.serverDisclaimer = await serverDisclaimer
     }
 
     @Function(\Action.Cases.signIn)
@@ -128,12 +136,25 @@ final class UserSignInViewModel: ObservableObject {
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .trimmingCharacters(in: .objectReplacement)
 
-        let password = password
+        let normalizedPassword = password
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .trimmingCharacters(in: .objectReplacement)
 
-        let response = try await server.client.signIn(username: username, password: password)
+        let response: AuthenticationResult
+        #if canImport(EmbyAPI)
+        if server.isEmby {
+            response = try await EmbyServer.signIn(at: server, username: username, password: password)
+        } else {
+            response = try await server.client.signIn(username: username, password: normalizedPassword)
+        }
+        #else
+        response = try await server.client.signIn(username: username, password: normalizedPassword)
+        #endif
 
+        try handleSignInResponse(response)
+    }
+
+    func handleSignInResponse(_ response: AuthenticationResult) throws {
         guard let accessToken = response.accessToken,
               let userData = response.user,
               let id = userData.id,
@@ -144,6 +165,8 @@ final class UserSignInViewModel: ObservableObject {
         }
 
         if let existingUser = existingUser(id: id) {
+            guard existingUser.serverID == server.id else { throw ErrorMessage(L10n.connectionServerMismatch) }
+
             events.send(.existingUser(((existingUser, accessToken), userData)))
         } else {
             let newUserState = UserState(
@@ -283,9 +306,16 @@ final class UserSignInViewModel: ObservableObject {
         let request = Paths.getBrandingOptions
         let response = try await server.client.send(request)
 
-        guard let disclaimer = response.value.loginDisclaimer, disclaimer.isNotEmpty else { return nil }
+        return normalizedServerDisclaimer(response.value.loginDisclaimer)
+    }
 
-        return disclaimer
+    private func normalizedServerDisclaimer(_ disclaimer: String?) -> String? {
+        disclaimer?.replacingOccurrences(
+            of: #"(?i)<br[ \t]*/?[ \t]*>(?:\r\n|\n|\r)?"#,
+            with: "\n",
+            options: .regularExpression
+        )
+        .nilIfBlank
     }
 
     private func retrieveIsQuickConnectEnabled() async throws -> Bool {

@@ -19,16 +19,16 @@ struct AboutAppView: View {
 
     @ContentBuilder
     var body: some View {
-        Form(image: .jellyfinBlobBlue) {
+        Form(image: .cineferryMark) {
             if !viewLayout.isLarge {
                 Section {
                     VStack(alignment: .center, spacing: 10) {
-                        Image(.jellyfinBlobBlue)
+                        Image(.cineferryMark)
                             .resizable()
                             .aspectRatio(1, contentMode: .fit)
                             .frame(height: 150)
 
-                        Text(verbatim: "Swiftfin")
+                        Text(L10n.cineFerry)
                             .fontWeight(.semibold)
                             .font(.title2)
                     }
@@ -77,7 +77,7 @@ struct AboutAppView: View {
                     image: .logoGithub,
                     external: true
                 ) {
-                    UIApplication.shared.open(.swiftfinGithub)
+                    UIApplication.shared.open(.upstreamGitHub)
                 }
 
                 ChevronButton(
@@ -86,7 +86,7 @@ struct AboutAppView: View {
                     systemName: "text.document",
                     external: true
                 ) {
-                    UIApplication.shared.open(.swiftfinGithubLicense)
+                    UIApplication.shared.open(.upstreamGitHubLicense)
                 }
 
                 ChevronButton(
@@ -94,7 +94,7 @@ struct AboutAppView: View {
                     systemName: "plus.circle.fill",
                     external: true
                 ) {
-                    UIApplication.shared.open(.swiftfinGithubIssues)
+                    UIApplication.shared.open(.upstreamGitHubIssues)
                 }
                 .symbolRenderingMode(.monochrome)
                 #endif

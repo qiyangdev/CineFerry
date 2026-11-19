@@ -49,16 +49,23 @@ final class ConnectToServerViewModel {
         case initial
     }
 
-    let logger = Logger.swiftfin()
+    let logger = Logger.cineFerry()
 
     private(set) var localServers: OrderedSet<ServerState> = []
 
     @Function(\Action.Cases.connect)
     private func connectToServer(_ url: String) async throws {
-        let formattedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        let address = url.trimmingCharacters(in: .whitespacesAndNewlines)
             .trimmingCharacters(in: .objectReplacement)
             .trimmingCharacters(in: ["/"])
-            .prepending("http://", if: !url.contains("://"))
+        let formattedURL: String
+        if let scheme = ["http", "https"].first(where: { address.lowercased().hasPrefix("\($0):/") }) {
+            // URL entry can supply a single slash after the scheme.
+            let hostAndPath = address.dropFirst(scheme.count + 1).drop(while: { $0 == "/" })
+            formattedURL = "\(scheme)://\(hostAndPath)"
+        } else {
+            formattedURL = address.prepending("http://", if: !address.contains("://"))
+        }
 
         guard let parsedURL = URL(string: formattedURL)
         else {
@@ -72,24 +79,51 @@ final class ConnectToServerViewModel {
         }
 
         let client = JellyfinClient(
-            configuration: .swiftfinConfiguration(url: url),
-            sessionDelegate: URLSessionProxyDelegate(logger: NetworkLogger.swiftfin())
+            configuration: .cineFerryConfiguration(url: url),
+            sessionDelegate: URLSessionProxyDelegate(logger: NetworkLogger.cineFerry())
         )
 
-        let response = try await client.send(Paths.getPublicSystemInfo)
+        let publicInfo: PublicSystemInfo
+        let connectionURL: URL
+        do {
+            let response = try await client.send(Paths.getPublicSystemInfo)
+            try Task.checkCancellation()
+            let resolvedURL = processConnectionURL(initial: url, response: response.response.url)
+            #if canImport(EmbyAPI)
+            if EmbyServer.matches(response.value) {
+                publicInfo = try await EmbyServer.probe(resolvedURL)
+            } else {
+                publicInfo = response.value
+            }
+            #else
+            publicInfo = response.value
+            #endif
+            connectionURL = resolvedURL
+        } catch {
+            #if canImport(EmbyAPI)
+            try Task.checkCancellation()
+            guard url.lastPathComponent.lowercased() != "emby" else { throw error }
+
+            let embyURL = url.appending(component: "emby")
+            let info = try? await EmbyServer.probe(embyURL)
+            try Task.checkCancellation()
+            guard let info else { throw error }
+
+            publicInfo = info
+            connectionURL = embyURL
+            #else
+            throw error
+            #endif
+        }
+
         try Task.checkCancellation()
 
-        guard let name = response.value.serverName,
-              let id = response.value.id
+        guard let name = publicInfo.serverName,
+              let id = publicInfo.id
         else {
             logger.critical("Missing server data from network call")
             throw ErrorMessage(L10n.unknownError)
         }
-
-        let connectionURL = processConnectionURL(
-            initial: url,
-            response: response.response.url
-        )
 
         let newServerState = ServerState(
             urls: [connectionURL],
@@ -107,9 +141,7 @@ final class ConnectToServerViewModel {
             return
         }
 
-        try await save(server: newServerState)
-        try Task.checkCancellation()
-
+        save(server: newServerState, publicInfo: publicInfo)
         events.send(.connected(newServerState))
     }
 
@@ -129,15 +161,12 @@ final class ConnectToServerViewModel {
         return normalizedURL
     }
 
-    private func save(server: ServerState) async throws {
-        let publicInfo = try await server.getPublicSystemInfo()
-        try Task.checkCancellation()
-
+    private func save(server: ServerState, publicInfo: PublicSystemInfo) {
         let newServers = StoredValues[.Server.servers]
             .appending(server)
 
-        StoredValues[.Server.servers] = newServers
         StoredValues[.Server.publicInfo(id: server.id)] = publicInfo
+        StoredValues[.Server.servers] = newServers
     }
 
     @Function(\Action.Cases.addConnection)

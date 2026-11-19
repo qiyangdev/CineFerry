@@ -13,11 +13,12 @@ import UIKit
 
 extension JellyfinClient.Configuration {
 
-    static func swiftfinConfiguration(
+    static func cineFerryConfiguration(
         url: URL,
         accessToken: String? = nil
     ) -> Self {
-        let client = "Swiftfin \(UIDevice.platform)"
+        let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "CineFerry"
+        let client = "\(appName) \(UIDevice.platform)"
         let deviceName = UIDevice.current
             .name
             .folding(options: .diacriticInsensitive, locale: .current)

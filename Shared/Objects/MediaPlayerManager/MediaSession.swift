@@ -78,7 +78,7 @@ final class MediaSession {
     private(set) var intent: PlaybackIntent
     private(set) var isSeeking = false
     private var isAdvancingQueue = false
-    let logger = Logger.swiftfin()
+    let logger = Logger.cineFerry()
     private(set) var playbackItem: MediaPlayerItem?
     private(set) var playbackRequestStatus: PlaybackRequestStatus = .playing
     private(set) var playbackState = PlaybackState()

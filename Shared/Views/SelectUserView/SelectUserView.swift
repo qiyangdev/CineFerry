@@ -157,12 +157,12 @@ struct SelectUserView: View {
 
     @ContentBuilder
     private var splashScreenBackground: some View {
-        let sources = splashScreenImageSources
+        let sources = splashScreenImageSources.compacted(using: \.url)
 
         if selectUserUseSplashscreen, sources.isNotEmpty {
             GeometryReader { geometry in
                 ImageView(sources.shuffled())
-                    .pipeline(.Swiftfin.local)
+                    .pipeline(.CineFerry.local)
                     .image { image in
                         image.scaledToFill()
                     }
@@ -300,7 +300,7 @@ struct SelectUserView: View {
 
             case .content:
                 if viewModel.servers.isEmpty {
-                    ConnectToJellyfinView()
+                    ConnectToMediaServerView()
                         #if os(tvOS)
                             .coordinatedFocus(.fallback)
                         #endif
@@ -328,7 +328,7 @@ struct SelectUserView: View {
         }
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Image(.jellyfinBlobBlue)
+                Image(.cineferryMark)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: viewLayout.value(standard: 30, large: 100))

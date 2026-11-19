@@ -167,6 +167,15 @@ final class FilterViewModel: ViewModel {
 
     @Function(\Action.Cases.getQueryFilters)
     private func _getQueryFilters() async throws {
+        #if canImport(EmbyAPI)
+        let session = try requireUserSession()
+        if session.server.isEmby {
+            let catalog = try EmbyMediaCatalog(client: session.makeEmbyClient(), userID: session.user.id)
+            let options = try await catalog.filterOptions(parentID: parent?.id, itemTypes: itemTypes)
+            allFilters = options.union(.all)
+            return
+        }
+        #endif
         try await getFilters()
         try await getFiltersLegacy()
     }

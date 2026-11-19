@@ -30,7 +30,7 @@ enum MediaPlayerItemResolver {
             initialItem = channel
         }
 
-        let logger = Logger.swiftfin()
+        let logger = Logger.cineFerry()
 
         guard let itemID = initialItem.id else {
             logger.critical("No item ID!")
@@ -83,48 +83,76 @@ enum MediaPlayerItemResolver {
         try userSession.items.validate()
         let client = userSession.client
 
-        let response = try await Task { try await client.send(request) }.value
+        var playback: PlaybackInfoResponse
+        #if canImport(EmbyAPI)
+        if userSession.server.isEmby {
+            playback = try await EmbyServer.playbackInfo(
+                playbackInfo,
+                itemID: itemID,
+                client: userSession.makeEmbyClient()
+            )
+        } else {
+            playback = try await Task { try await client.send(request) }.value.value
+        }
+        #else
+        playback = try await Task { try await client.send(request) }.value.value
+        #endif
 
         do {
             try Task.checkCancellation()
             try userSession.items.validate()
 
             guard storedItem.value != nil, intent.entry.value != nil else { throw ItemStore.StoreError.itemUnavailable }
-
-            let mediaSource: MediaSourceInfo? = {
-
-                guard let mediaSources = response.value.mediaSources else { return nil }
-
-                if let tag = initialMediaSource.eTag,
-                   let matchingTag = mediaSources.first(property: \.eTag, equalTo: tag) {
-                    return matchingTag
-                }
-
-                if let initialID = initialMediaSource.id,
-                   let matchingMediaSource = mediaSources.first(property: \.id, equalTo: initialID) {
-                    return matchingMediaSource
-                }
-
-                for source in mediaSources {
-                    if let openToken = source.openToken,
-                       let id = source.id,
-                       openToken.contains(id) {
-                        return source
-                    }
-                }
-
-                logger.warning("Unable to find matching media source, defaulting to first media source")
-
-                return mediaSources.first
-            }()
-
-            guard let mediaSource else {
+            guard var mediaSource = selectSource(from: playback, matching: initialMediaSource, logger: logger) else {
                 throw ErrorMessage("Unable to find media source for item")
             }
 
+            #if canImport(EmbyAPI)
+            if userSession.server.isEmby,
+               item.mediaType == .video,
+               !item.isLiveStream,
+               initialMediaSource.liveStreamID == nil,
+               mediaSource.liveStreamID == nil,
+               configuration.compatibilityMode != .directPlay,
+               configuration.requestedBitrate != .auto,
+               mediaSource.transcodingURL == nil,
+               let sourceBitrate = mediaSource.bitrate ?? initialMediaSource.bitrate,
+               sourceBitrate > maxBitrate {
+                // Emby can offer the original even when it exceeds a requested playback cap.
+                playbackInfo.mediaSourceID = mediaSource.id ?? playbackInfo.mediaSourceID
+                playback = try await EmbyServer.playbackInfo(
+                    playbackInfo,
+                    itemID: itemID,
+                    client: userSession.makeEmbyClient(),
+                    requiresVideoTranscoding: true
+                )
+                try Task.checkCancellation()
+                try userSession.items.validate()
+                guard storedItem.value != nil, intent.entry.value != nil else { throw ItemStore.StoreError.itemUnavailable }
+
+                let transcodedSource = selectSource(from: playback, matching: mediaSource, logger: logger)
+                guard let transcodedSource, transcodedSource.transcodingURL != nil else {
+                    let errorCode = playback.errorCode?.rawValue ?? "none"
+                    let serverSupportsTranscoding = transcodedSource?.isSupportsTranscoding.map(String.init) ?? "unknown"
+                    let userAllowsTranscoding = userSession.userData.policy?.enableVideoPlaybackTranscoding.map(String.init) ?? "unknown"
+                    logger.warning(
+                        "Emby capped playback returned no transcoding URL",
+                        metadata: [
+                            "errorCode": .string(errorCode),
+                            "serverSupportsTranscoding": .string(serverSupportsTranscoding),
+                            "userAllowsTranscoding": .string(userAllowsTranscoding),
+                        ]
+                    )
+                    throw ErrorMessage(L10n.containerBitrateExceedsLimit)
+                }
+
+                mediaSource = transcodedSource
+            }
+            #endif
+
             item.runTimeTicks = mediaSource.runTimeTicks ?? item.runTimeTicks
 
-            guard let playSessionID = response.value.playSessionID else {
+            guard let playSessionID = playback.playSessionID else {
                 throw ErrorMessage("No associated play session ID")
             }
 
@@ -172,9 +200,38 @@ enum MediaPlayerItemResolver {
                 thumbnailProvider: { await storedItem.value?.getNowPlayingImage() }
             )
         } catch {
-            closeLiveStreams(response.value.mediaSources ?? [], userSession: userSession)
+            closeLiveStreams(playback.mediaSources ?? [], userSession: userSession)
             throw error
         }
+    }
+
+    private static func selectSource(
+        from playback: PlaybackInfoResponse,
+        matching initialMediaSource: MediaSourceInfo,
+        logger: Logger
+    ) -> MediaSourceInfo? {
+        guard let mediaSources = playback.mediaSources else { return nil }
+
+        if let tag = initialMediaSource.eTag,
+           let matchingTag = mediaSources.first(property: \.eTag, equalTo: tag) {
+            return matchingTag
+        }
+
+        if let initialID = initialMediaSource.id,
+           let matchingMediaSource = mediaSources.first(property: \.id, equalTo: initialID) {
+            return matchingMediaSource
+        }
+
+        for source in mediaSources {
+            if let openToken = source.openToken,
+               let id = source.id,
+               openToken.contains(id) {
+                return source
+            }
+        }
+
+        logger.warning("Unable to find matching media source, defaulting to first media source")
+        return mediaSources.first
     }
 
     private static func getMaxBitrate(
@@ -221,6 +278,18 @@ enum MediaPlayerItemResolver {
         guard let itemID = item.id else {
             throw ErrorMessage("No item ID while building online media player item!")
         }
+
+        #if canImport(EmbyAPI)
+        if userSession.server.isEmby, item.mediaType == .video {
+            return try EmbyServer.videoURL(
+                itemID: itemID,
+                source: mediaSource,
+                playSessionID: playSessionID,
+                baseURL: userSession.server.effectiveServerURL,
+                accessToken: userSession.user.accessToken
+            )
+        }
+        #endif
 
         if let transcodingPath = mediaSource.transcodingURL {
             logger.trace("Using transcoding URL for item \(itemID)")

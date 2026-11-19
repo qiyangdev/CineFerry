@@ -117,31 +117,29 @@ struct ItemLibrary: MediaLibrary, SearchablePagingLibrary, WithRandomElementLibr
         environment: Environment,
         pageState: LibraryPageState
     ) async throws -> [ItemPatch] {
-        var parameters = attachPage(
+        let query = attachPage(
             to: attachFilters(
                 to: makeBaseItemParameters(environment: environment),
                 using: environment.filters
             ),
             pageState: pageState
         )
-        parameters.userID = pageState.userSession.user.id
 
-        return try await retrieveItems(parameters: parameters, environment: environment, pageState: pageState)
+        return try await retrieveItems(query: query, environment: environment, pageState: pageState)
     }
 
     func retrieveRandomElement(
         environment: Environment,
         pageState: LibraryPageState
     ) async throws -> ItemPatch? {
-        var parameters = attachFilters(
+        var query = attachFilters(
             to: makeBaseItemParameters(environment: environment),
             using: environment.filters
         )
-        parameters.limit = 1
-        parameters.sortBy = [.random]
-        parameters.userID = pageState.userSession.user.id
+        query.limit = 1
+        query.sortBy = [ItemSortBy.random.rawValue]
 
-        return try await retrieveItems(parameters: parameters, environment: environment, pageState: pageState).first
+        return try await retrieveItems(query: query, environment: environment, pageState: pageState).first
     }
 
     func retrieveSearchPage(
@@ -157,17 +155,16 @@ struct ItemLibrary: MediaLibrary, SearchablePagingLibrary, WithRandomElementLibr
             pageState: pageState
         )
         parameters.searchTerm = filterViewModel.staticFilters.query ?? query
-        parameters.userID = pageState.userSession.user.id
 
-        return try await retrieveItems(parameters: parameters, environment: environment, pageState: pageState)
+        return try await retrieveItems(query: parameters, environment: environment, pageState: pageState)
     }
 
     private func retrieveItems(
-        parameters: Paths.GetItemsParameters,
+        query: MediaCatalogQuery,
         environment: Environment,
         pageState: LibraryPageState
     ) async throws -> [ItemPatch] {
-        var parameters = parameters
+        var query = query
         let groupedFolders: [String]?
 
         if environment.grouping == .folders,
@@ -176,20 +173,19 @@ struct ItemLibrary: MediaLibrary, SearchablePagingLibrary, WithRandomElementLibr
             groupedFolders = pageState.userSession.userData.configuration?.groupedFolders ?? []
             guard let groupedFolders, groupedFolders.isNotEmpty else { return [] }
 
-            parameters.parentID = nil
-            parameters.ids = groupedFolders
+            query.parentID = nil
+            query.ids = groupedFolders
 
-            if parameters.sortBy == [.random] {
-                parameters.limit = nil
+            if query.sortBy == [ItemSortBy.random.rawValue] {
+                query.limit = nil
             }
         } else {
             groupedFolders = nil
         }
 
-        let request = Paths.getItems(parameters: parameters)
-        let response = try await pageState.userSession.client.send(request)
+        let page = try await pageState.userSession.makeMediaCatalog().items(matching: query)
 
-        return try pageState.items(from: response).filter { patch in
+        return pageState.items(from: page).filter { patch in
             guard let groupedFolders else { return true }
 
             return groupedFolders.contains(patch.value.id ?? "") &&
@@ -197,29 +193,29 @@ struct ItemLibrary: MediaLibrary, SearchablePagingLibrary, WithRandomElementLibr
         }
     }
 
-    private func makeBaseItemParameters(environment: Environment) -> Paths.GetItemsParameters {
-        var parameters = Paths.GetItemsParameters()
-        parameters.enableUserData = true
-        parameters.fields = PosterSubtitleField.itemFields
-        parameters.includeItemTypes = parent.supportedItemTypes(for: environment.grouping)
-        parameters.isRecursive = parent.isRecursiveCollection(for: environment.grouping)
-        parameters.sortBy = [.name]
-        parameters.sortOrder = [.ascending]
+    private func makeBaseItemParameters(environment: Environment) -> MediaCatalogQuery {
+        var query = MediaCatalogQuery()
+        query.includeUserData = true
+        query.fields = PosterSubtitleField.itemFields.map(\.rawValue)
+        query.itemTypes = parent.supportedItemTypes(for: environment.grouping).map(\.rawValue)
+        query.recursive = parent.isRecursiveCollection(for: environment.grouping)
+        query.sortBy = [ItemSortBy.name.rawValue]
+        query.sortOrder = [ItemSortOrder.ascending.rawValue]
 
-        guard let parentID = parent.id else { return parameters }
+        guard let parentID = parent.id else { return query }
 
         switch parent.libraryType {
         case .person:
-            parameters.personIDs = [parentID]
+            query.personIDs = [parentID]
 
         case .studio:
-            parameters.studioIDs = [parentID]
+            query.studioIDs = [parentID]
 
         default:
-            parameters.parentID = parentID
+            query.parentID = parentID
         }
 
-        return parameters
+        return query
     }
 
     func materialize(_ page: [ItemPatch], pageState: LibraryPageState) throws -> [ItemEntry] {
@@ -258,53 +254,49 @@ struct ItemLibrary: MediaLibrary, SearchablePagingLibrary, WithRandomElementLibr
     }
 
     private func attachFilters(
-        to parameters: Paths.GetItemsParameters,
+        to query: MediaCatalogQuery,
         using filters: ItemFilterCollection
-    ) -> Paths.GetItemsParameters {
-        var parameters = parameters
-        parameters.audioLanguages = filters.audioLanguages.map(\.value)
-        parameters.filters = filters.traits
-        parameters.genres = filters.genres.map(\.value)
-        parameters.officialRatings = filters.officialRatings.map(\.value)
-        parameters.sortBy = filters.sortBy
-        parameters.sortOrder = filters.sortOrder
-        parameters.subtitleLanguages = filters.subtitleLanguages.map(\.value)
-        parameters.tags = filters.tags.map(\.value)
-        parameters.years = filters.years.compactMap { Int($0.value) }
+    ) -> MediaCatalogQuery {
+        var query = query
+        query.audioLanguages = filters.audioLanguages.map(\.value)
+        query.traits = filters.traits.map(\.rawValue)
+        query.genres = filters.genres.map(\.value)
+        query.officialRatings = filters.officialRatings.map(\.value)
+        query.sortBy = filters.sortBy.map(\.rawValue)
+        query.sortOrder = filters.sortOrder.map(\.rawValue)
+        query.subtitleLanguages = filters.subtitleLanguages.map(\.value)
+        query.tags = filters.tags.map(\.value)
+        query.years = filters.years.compactMap { Int($0.value) }
 
-        parameters.isMovie = filters.categories.contains(.movies) ? true : nil
-        parameters.isSeries = filters.categories.contains(.series) ? true : nil
-        parameters.isNews = filters.categories.contains(.news) ? true : nil
-        parameters.isKids = filters.categories.contains(.kids) ? true : nil
-        parameters.isSports = filters.categories.contains(.sports) ? true : nil
+        query.categories = filters.categories
 
-        if let query = filters.query {
-            parameters.searchTerm = query
+        if let searchTerm = filters.query {
+            query.searchTerm = searchTerm
         }
 
         if filters.itemTypes.isNotEmpty {
-            parameters.includeItemTypes = filters.itemTypes
+            query.itemTypes = filters.itemTypes.map(\.rawValue)
         }
 
         if let letter = filters.letter.first {
             if letter.value == "#" {
-                parameters.nameLessThan = "A"
+                query.nameLessThan = "A"
             } else {
-                parameters.nameStartsWith = letter.value
+                query.nameStartsWith = letter.value
             }
         }
 
-        return parameters
+        return query
     }
 
     private func attachPage(
-        to parameters: Paths.GetItemsParameters,
+        to query: MediaCatalogQuery,
         pageState: LibraryPageState
-    ) -> Paths.GetItemsParameters {
-        var parameters = parameters
-        parameters.limit = pageState.pageSize
-        parameters.startIndex = pageState.pageOffset
-        return parameters
+    ) -> MediaCatalogQuery {
+        var query = query
+        query.limit = pageState.pageSize
+        query.offset = pageState.pageOffset
+        return query
     }
 }
 

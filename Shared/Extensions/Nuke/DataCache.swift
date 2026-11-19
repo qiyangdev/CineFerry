@@ -16,10 +16,10 @@ import Nuke
 
 extension DataCache {
 
-    enum Swiftfin {}
+    enum CineFerry {}
 }
 
-extension DataCache.Swiftfin {
+extension DataCache.CineFerry {
 
     static let posters: DataCache? = {
         let dataCache = try? DataCache(name: "org.jellyfin.swiftfin/Posters") { name in

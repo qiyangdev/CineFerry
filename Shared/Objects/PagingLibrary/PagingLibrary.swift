@@ -33,6 +33,12 @@ final class LibraryPageState {
     private var serverItemCount: Int?
     private var totalRows: Int?
 
+    func items(from page: MediaCatalogPage) -> [ItemPatch] {
+        serverItemCount = page.serverItemCount
+        totalRows = page.totalCount
+        return page.items
+    }
+
     func items(from response: Response<BaseItemDtoQueryResult>) throws -> [ItemPatch] {
         serverItemCount = response.value.items?.count ?? 0
         totalRows = response.value.totalRecordCount

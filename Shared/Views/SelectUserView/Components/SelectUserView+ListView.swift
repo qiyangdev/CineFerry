@@ -59,7 +59,7 @@ extension SelectUserView {
                                 source: item.user.profileImageSource(
                                     client: item.server.client
                                 ),
-                                pipeline: .Swiftfin.local
+                                pipeline: .CineFerry.local
                             )
                             .subtleShadow()
                             .frame(width: viewLayout.value(standard: viewLayout.value(compact: 50, regular: 80), large: 120))

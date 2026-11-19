@@ -61,8 +61,10 @@ struct LocalUserSettingsView: View {
 
             if let userSession = imageViewModel.userSession {
                 Section {
-                    ChevronButton(L10n.quickConnect) {
-                        router.route(to: .quickConnectAuthorize(user: userSession.userData))
+                    if userSession.server.supportsQuickConnect {
+                        ChevronButton(L10n.quickConnect) {
+                            router.route(to: .quickConnectAuthorize(user: userSession.userData))
+                        }
                     }
 
                     ChevronButton(L10n.password) {

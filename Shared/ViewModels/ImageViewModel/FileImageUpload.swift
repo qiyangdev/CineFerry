@@ -23,7 +23,7 @@ enum FileImageUpload {
         case invalidImage
     }
 
-    private static let queue = DispatchQueue(label: "Swiftfin.FileImageUpload", qos: .userInitiated)
+    private static let queue = DispatchQueue(label: "CineFerry.FileImageUpload", qos: .userInitiated)
 
     static func prepare(_ file: URL) async throws -> Payload {
         try await withCheckedThrowingContinuation { continuation in

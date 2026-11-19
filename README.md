@@ -1,60 +1,27 @@
-<div align="center">
-  <img alt="Swiftfin" src="./Resources/primary-wide.svg">
+# CineFerry
 
-  <h1>Swiftfin</h1>
-  <img src="https://img.shields.io/badge/iOS-18+-red"/>
-  <img src="https://img.shields.io/badge/tvOS-26+-red"/>
-  <img src="https://img.shields.io/badge/Jellyfin-12.0-9962be"/>
-  
-  <a href="https://translate.jellyfin.org/engage/swiftfin/">
-    <img src="https://translate.jellyfin.org/widgets/swiftfin/-/svg-badge.svg"/>
-  </a>
-  <a href="https://matrix.to/#/#jellyfin:matrix.org">
-    <img src="https://img.shields.io/matrix/jellyfin:matrix.org">
-  </a>
-  <a href="https://discord.gg/zHBxVSXdBV">
-    <img src="https://img.shields.io/badge/Talk%20on-Discord-brightgreen">
-  </a>
-</div>
+CineFerry is a media client for Jellyfin and Emby. It is based on [Swiftfin](https://github.com/jellyfin/Swiftfin).
 
-<p align="center">
-  <b>Swiftfin</b> is a modern video client for the <a href="https://github.com/jellyfin/jellyfin">Jellyfin</a> media server.
-</p>
+| Platform | Minimum OS | Server support |
+| --- | --- | --- |
+| iOS | 26.1 | Jellyfin and Emby |
+| tvOS | 26.1 | Jellyfin and Emby |
 
-## ⚡️ Download
+The iOS and tvOS baselines cover sign-in, opening a library item, playback, closing the player, and resuming after a cold launch. The iOS baseline also covers switching Emby playback from Auto to a 420 kbps cap. Jellyfin and Emby support different administrative and authentication features.
 
-<a href="https://apps.apple.com/us/app/swiftfin/id1604098728">
-  <img height=75 alt="Download on the Apple App Store" src="./Resources/Download_on_the_App_Store_Badge_US-UK_RGB_blk_092917.svg"/>
-</a>
+On Apple TV, open **Connect** and choose **Emby Connect**. Enter the displayed PIN at [emby.media/pin](https://emby.media/pin) using your Emby Connect account, then select a linked server on Apple TV. You can also connect directly by entering the server address and signing in with a local server account.
 
-## 🛠️ TestFlight
+## Development
 
-Use the TestFlight version to test new features and bug fixes before being published to the App Store. We are grateful for your time and resources for reporting new bugs.
+Open `CineFerry.xcodeproj` in Xcode and select `CineFerry` for iOS or `CineFerry tvOS` for tvOS. Swift Package Manager uses the versions recorded in `Package.resolved`.
 
-<a href="https://testflight.apple.com/join/SqNPfdxq">
-  <img height=75 alt="Get the beta on TestFlight" src="./Resources/testflight.svg"/>
-</a>
+- [Run the iOS dual-service baseline](Documentation/ios-baseline.md)
+- [Run the tvOS dual-service baseline](Documentation/tvos-baseline.md)
+- [Playback engines](Documentation/players.md)
+- [Contributing](Documentation/contributing.md)
 
-## 📖 Documentation
+The app contains the service adapters and playback policy. [EmbyAPI](https://github.com/qiyangdev/EmbyAPI) provides the Emby API client.
 
-Swiftfin provides detailed documentation to help you understand key aspects of the app and its development approach:
+## License
 
-- [🎞️ Library Support](https://github.com/jellyfin/Swiftfin/blob/main/Documentation/libraries.md) — Information on library compatibility and supported media types in Swiftin.
-- [🎬 Media Playback](https://github.com/jellyfin/Swiftfin/blob/main/Documentation/players.md) — Learn about Swiftfin's playback.
-- [🧩 OS Version Support](https://github.com/jellyfin/Swiftfin/blob/main/Documentation/version.md) — Read about how we determine the minimum supported OS and which versions of iOS & tvOS are supported.
-- [🐞 Common Issues](https://github.com/jellyfin/Swiftfin/blob/main/Documentation/common_issues.md) — If you are experiencing an issue with Swiftfin, this is the best place to start.
-- [💜 Supporting Development](https://jellyfin.org/docs/general/contributing/direct-donations) — Learn how you can support project development.
-
-## ⚙️ Development
-
-Thank you for your interest in Swiftfin! Please check out the [Contribution Guidelines](https://github.com/jellyfin/Swiftfin/blob/main/Documentation/contributing.md) to get started.
-
-## 📚 Translations
-
-**Don't see Swiftfin in your language?**
-
-Check out our [Weblate instance](https://translate.jellyfin.org/projects/swiftfin/) to help translate Swiftfin and other Jellyfin projects.
-
-<a href="https://translate.jellyfin.org/engage/swiftfin/">
-<img src="https://translate.jellyfin.org/widgets/swiftfin/-/multi-auto.svg"/>
-</a>
+CineFerry is distributed under the [Mozilla Public License 2.0](LICENSE.md). The Swiftfin source notices retain the original contributors’ attribution.

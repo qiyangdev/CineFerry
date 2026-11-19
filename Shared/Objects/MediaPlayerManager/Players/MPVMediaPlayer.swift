@@ -69,7 +69,7 @@ final class MPVMediaPlayer {
     #endif
 
     init() {
-        let logger = Logger.swiftfin()
+        let logger = Logger.cineFerry()
 
         player.logHandler = { message in
             let level: Logger.Level

@@ -19,12 +19,12 @@ extension UIDevice {
             AVPlayer.eligibleForHDRPlayback
         }
 
-        /// Indicates Swiftfin handle Dolby Vision content (`false`) or should it be tone mapped by the server (`true`).
+        /// Indicates CineFerry handle Dolby Vision content (`false`) or should it be tone mapped by the server (`true`).
         static var isDolbyVisionEnabled: Bool {
             !StoredValues[.User.forceDVTranscode]
         }
 
-        /// Indicates Swiftfin handle HDR content (`false`) or should it be tone mapped by the server (`true`).
+        /// Indicates CineFerry handle HDR content (`false`) or should it be tone mapped by the server (`true`).
         static var isHDREnabled: Bool {
             !StoredValues[.User.forceHDRTranscode]
         }

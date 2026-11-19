@@ -579,7 +579,7 @@ extension VideoPlayer {
             return (dismissedSupplementContainerOffset + viewLayout.edgePadding) * offsetPercentage
         }
 
-        private let logger = Logger.swiftfin()
+        private let logger = Logger.cineFerry()
         private let mediaSession: MediaSession
         private let videoSize: () -> CGSize
         private let player: (VideoLayout) -> AnyView

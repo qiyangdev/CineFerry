@@ -74,7 +74,7 @@ final class UserSessionManager: ObservableObject {
 
     var cancellables = Set<AnyCancellable>()
 
-    let logger = Logger.swiftfin()
+    let logger = Logger.cineFerry()
 
     @Injected(\.mediaPlayerManager)
     private(set) var mediaPlayerManager

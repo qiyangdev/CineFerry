@@ -42,7 +42,7 @@ struct SettingsView: View {
 
     @ContentBuilder
     var body: some View {
-        Form(image: .jellyfinBlobBlue) {
+        Form(image: .cineferryMark) {
             serverSection
             customizeSection
             diagnosticsSection
@@ -73,6 +73,7 @@ struct SettingsView: View {
                 ) {
                     Label {
                         Text(userSession.server.name)
+                            .lineLimit(1)
                     } icon: {
                         if !userSession.server.isVersionCompatible {
                             Image(systemName: "exclamationmark.circle.fill")
@@ -82,7 +83,7 @@ struct SettingsView: View {
                 }
 
                 #if os(iOS)
-                if userSession.userData.policy?.isAdministrator == true {
+                if userSession.server.supportsServerAdministration, userSession.userData.policy?.isAdministrator == true {
                     ChevronButton(L10n.dashboard) {
                         router.route(to: .adminDashboard)
                     }

@@ -34,16 +34,14 @@ struct UserViewLibrary: PagingLibrary {
     ) async throws -> [ItemPatch] {
         guard pageState.pageOffset == 0 else { return [] }
 
-        let parameters = Paths.GetUserViewsParameters(userID: pageState.userSession.user.id)
-        let request = Paths.getUserViews(parameters: parameters)
-
-        async let userViews = pageState.userSession.client.send(request)
+        let catalog = try pageState.userSession.makeMediaCatalog()
+        async let userViews = catalog.libraries()
         async let currentUser = pageState.userSession.getUser(id: pageState.userSession.user.id)
 
         let excludedLibraryIDs = try await currentUser.value?.configuration?.myMediaExcludes ?? []
         let response = try await userViews
 
-        return try pageState.items(from: response)
+        return pageState.items(from: response)
             .filter { patch in
                 CollectionType.supportedCases.contains(patch.value.collectionType ?? .folders) &&
                     !excludedLibraryIDs.contains(patch.value.id ?? "")
@@ -363,19 +361,16 @@ private extension UserViewLibraryElement {
             }
         }
 
-        var parameters = Paths.GetItemsParameters()
-        parameters.filters = filters
-        parameters.includeItemTypes = includeItemTypes
-        parameters.isRecursive = true
-        parameters.limit = 3
-        parameters.parentID = parentID
-        parameters.sortBy = [.random]
-        parameters.userID = userSession.user.id
+        var query = MediaCatalogQuery()
+        query.traits = filters?.map(\.rawValue) ?? []
+        query.itemTypes = includeItemTypes.map(\.rawValue)
+        query.recursive = true
+        query.limit = 3
+        query.parentID = parentID
+        query.sortBy = [ItemSortBy.random.rawValue]
 
-        let request = Paths.getItems(parameters: parameters)
-        let response = try await userSession.send(request)
-
-        return (response.value.items ?? [])
+        let items = try await userSession.catalogSnapshots { try await $0.items(matching: query) }
+        return items.value
             .flatMap { $0.imageSources(for: .landscape, size: .custom(width: 200)) }
     }
 }

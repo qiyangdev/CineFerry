@@ -47,7 +47,7 @@ final class RootCoordinator: ObservableObject {
         started = true
 
         do {
-            try await SwiftfinStore.setupDataStack()
+            try await CineFerryStore.setupDataStack()
         } catch {
             throw AppStartupError.dataStack(error)
         }
