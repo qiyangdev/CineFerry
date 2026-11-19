@@ -5,15 +5,16 @@ CineFerry is a media client for Jellyfin and Emby. It is based on [Swiftfin](htt
 | Platform | Minimum OS | Server support |
 | --- | --- | --- |
 | iOS | 18.6 | Jellyfin and Emby |
-| tvOS | 26.1 | Jellyfin |
+| tvOS | 26.1 | Jellyfin and Emby |
 
-The iOS baseline covers sign-in, opening a library item from Home, playback, closing the player, and resuming after a cold launch. It also covers switching Emby playback from Auto to a 420 kbps cap. Jellyfin and Emby support different administrative and authentication features.
+The iOS and tvOS baselines cover sign-in, opening a library item, playback, closing the player, and resuming after a cold launch. The iOS baseline also covers switching Emby playback from Auto to a 420 kbps cap. Jellyfin and Emby support different administrative and authentication features.
 
 ## Development
 
 Open `CineFerry.xcodeproj` in Xcode and select `CineFerry` for iOS or `CineFerry tvOS` for tvOS. Swift Package Manager uses the versions recorded in `Package.resolved`.
 
 - [Run the iOS dual-service baseline](Documentation/ios-baseline.md)
+- [Run the tvOS dual-service baseline](Documentation/tvos-baseline.md)
 - [Playback engines](Documentation/players.md)
 - [Contributing](Documentation/contributing.md)
 

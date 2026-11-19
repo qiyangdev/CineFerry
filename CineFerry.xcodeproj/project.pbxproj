@@ -98,6 +98,7 @@
 		E19009260000000000000002 /* CineFerryMacros in Frameworks */ = {isa = PBXBuildFile; productRef = E19009260000000000000004 /* CineFerryMacros */; };
 		E19010180000000000000001 /* GoogleCastDynamic in Frameworks */ = {isa = PBXBuildFile; productRef = E19010180000000000000002 /* GoogleCastDynamic */; };
 		E19011180000000000000001 /* EmbyAPI in Frameworks */ = {isa = PBXBuildFile; productRef = E19011180000000000000002 /* EmbyAPI */; };
+		E19011180000000000000004 /* EmbyAPI in Frameworks */ = {isa = PBXBuildFile; productRef = E19011180000000000000005 /* EmbyAPI */; };
 		E19138CA2E7E7FA20061E464 /* StatefulMacros in Frameworks */ = {isa = PBXBuildFile; productRef = E19138C92E7E7FA20061E464 /* StatefulMacros */; };
 		E19D41B22BF2BFA50082B8B2 /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = E19D41B12BF2BFA50082B8B2 /* KeychainSwift */; };
 		E19DDEC72948EF9900954E10 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = E19DDEC62948EF9900954E10 /* OrderedCollections */; };
@@ -316,6 +317,7 @@
 				62666E2C27E5021000EC0ECD /* QuartzCore.framework in Frameworks */,
 				62666E1927E501D000EC0ECD /* CoreFoundation.framework in Frameworks */,
 				E1BD95B42FBE8E50001CDA57 /* JellyfinAPI in Frameworks */,
+				E19011180000000000000004 /* EmbyAPI in Frameworks */,
 				E1BE3EBE2FE8DEAA00327990 /* FactoryKit in Frameworks */,
 				E19D41B22BF2BFA50082B8B2 /* KeychainSwift in Frameworks */,
 				E1155ACB2D0584A90021557A /* IdentifiedCollections in Frameworks */,
@@ -601,6 +603,7 @@
 				E19005010000000000000004 /* MPVUI */,
 				E1E2D7BE2E3FD936004E2E5F /* Transmission */,
 				E1BD95B32FBE8E50001CDA57 /* JellyfinAPI */,
+				E19011180000000000000005 /* EmbyAPI */,
 				E1079FD92FC6FFCE004B5C54 /* StatefulMacros */,
 				E1BE3EBD2FE8DEAA00327990 /* FactoryKit */,
 				E12CDBC02FFB593800828742 /* CollectionVGrid */,
@@ -2002,6 +2005,11 @@
 			productName = GoogleCastDynamic;
 		};
 		E19011180000000000000002 /* EmbyAPI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E19011180000000000000003 /* XCRemoteSwiftPackageReference "EmbyAPI" */;
+			productName = EmbyAPI;
+		};
+		E19011180000000000000005 /* EmbyAPI */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E19011180000000000000003 /* XCRemoteSwiftPackageReference "EmbyAPI" */;
 			productName = EmbyAPI;
