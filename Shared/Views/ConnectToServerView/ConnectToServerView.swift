@@ -29,6 +29,13 @@ struct ConnectToServerView: View {
     @StateObject
     private var viewModel = ConnectToServerViewModel()
 
+    #if os(tvOS) && canImport(EmbyAPI)
+    @State
+    private var showingEmbyConnect = false
+    @State
+    private var signedInWithEmbyConnect = false
+    #endif
+
     private let timer = Timer.publish(every: 12, on: .main, in: .common).autoconnect()
 
     private func onEvent(_ event: ConnectToServerViewModel._Event) {
@@ -140,6 +147,13 @@ struct ConnectToServerView: View {
             isLoading: viewModel.state == .connecting
         ) {
             connectSection
+            #if canImport(EmbyAPI)
+            Button(L10n.embyConnect) {
+                isURLFocused = false
+                showingEmbyConnect = true
+            }
+            .disabled(viewModel.state == .connecting)
+            #endif
         } trailingContentView: {
             localServersSection
         }
@@ -175,6 +189,15 @@ struct ConnectToServerView: View {
                     router.dismiss()
                 }
             }
+            #if os(tvOS) && canImport(EmbyAPI)
+            .sheet(isPresented: $showingEmbyConnect, onDismiss: {
+                if signedInWithEmbyConnect {
+                    router.dismiss()
+                }
+            }) {
+                EmbyConnectView { signedInWithEmbyConnect = true }
+            }
+            #endif
             .errorMessage($viewModel.error)
     }
 }

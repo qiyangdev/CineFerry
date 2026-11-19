@@ -9,6 +9,8 @@ CineFerry is a media client for Jellyfin and Emby. It is based on [Swiftfin](htt
 
 The iOS and tvOS baselines cover sign-in, opening a library item, playback, closing the player, and resuming after a cold launch. The iOS baseline also covers switching Emby playback from Auto to a 420 kbps cap. Jellyfin and Emby support different administrative and authentication features.
 
+On Apple TV, open **Connect** and choose **Emby Connect**. Enter the displayed PIN at [emby.media/pin](https://emby.media/pin) using your Emby Connect account, then select a linked server on Apple TV. You can also connect directly by entering the server address and signing in with a local server account.
+
 ## Development
 
 Open `CineFerry.xcodeproj` in Xcode and select `CineFerry` for iOS or `CineFerry tvOS` for tvOS. Swift Package Manager uses the versions recorded in `Package.resolved`.

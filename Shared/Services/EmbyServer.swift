@@ -80,12 +80,16 @@ enum EmbyServer {
         if let serverID = session.serverID, serverID != server.id {
             throw ErrorMessage(L10n.connectionServerMismatch)
         }
-        let emby = try client(url: url, userID: session.userID, accessToken: session.accessToken)
-        let response = try await emby.api.getUsersById(path: .init(Id: session.userID))
-        let user = try convertUser(response.ok.body.json)
-        guard user.id == session.userID else { throw ErrorMessage(L10n.unknownError) }
+        return try await authenticatedUser(at: url, userID: session.userID, accessToken: session.accessToken, serverID: server.id)
+    }
 
-        return AuthenticationResult(accessToken: session.accessToken, serverID: server.id, user: user)
+    static func authenticatedUser(at url: URL, userID: String, accessToken: String, serverID: String) async throws -> AuthenticationResult {
+        let emby = try client(url: url, userID: userID, accessToken: accessToken)
+        let response = try await emby.api.getUsersById(path: .init(Id: userID))
+        let user = try convertUser(response.ok.body.json)
+        guard user.id == userID else { throw ErrorMessage(L10n.unknownError) }
+
+        return AuthenticationResult(accessToken: accessToken, serverID: serverID, user: user)
     }
 
     static func publicUsers(at url: URL) async throws -> [UserDto] {
