@@ -89,16 +89,17 @@ def configured_runner(template, target, service, fixture):
         return Path(file.name)
 
 
-def run_service(service, fixture, template, results, target, test_class):
+def run_service(service, fixture, template, results, target, test_class, scenario="playback"):
     device = fixture["simulator"]
     command(["xcrun", "simctl", "bootstatus", device, "-b"], results / f"{service}-boot.log")
     runner = configured_runner(template, target, service, fixture)
     bundle = results / f"{service}.xcresult"
+    test = TESTS[service] + ("EpisodeResume" if scenario == "episode-resume" else "")
     try:
         run = command([
             "xcodebuild", "test-without-building", "-xctestrun", str(runner),
             "-destination", f"id={device}", "-resultBundlePath", str(bundle),
-            f"-only-testing:{target}/{test_class}/{TESTS[service]}",
+            f"-only-testing:{target}/{test_class}/{test}",
             "-parallel-testing-enabled", "NO",
         ], results / f"{service}.log", check=False)
     finally:
@@ -117,6 +118,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("config", type=Path)
     parser.add_argument("--platform", choices=PLATFORMS, default="ios")
+    parser.add_argument("--scenario", choices=("playback", "episode-resume"), default="playback")
     parser.add_argument("--derived-data", type=Path, help="Reuse an existing CineFerry DerivedData directory")
     parser.add_argument("--service", choices=TESTS, help="Run a single service while developing a fixture")
     args = parser.parse_args()
@@ -129,7 +131,7 @@ def main():
     target_platform, scheme, sdk, test_class = PLATFORMS[args.platform]
     target = f"CineFerry {target_platform} Screenshots"
     template = build_test_runner(derived_data, results / "build.log", target_platform, scheme, sdk)
-    outcomes = [run_service(service, fixtures[service], template, results, target, test_class) for service in services]
+    outcomes = [run_service(service, fixtures[service], template, results, target, test_class, args.scenario) for service in services]
     return 0 if all(outcomes) else 1
 
 

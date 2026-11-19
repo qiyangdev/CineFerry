@@ -51,6 +51,21 @@ Use `--derived-data /path/to/DerivedData` to reuse a CineFerry build directory. 
 
 The tests verify that playback time advances, the player closes to the item details, and the same item resumes and advances after a cold launch. The Emby case also verifies that playback continues after selecting 420 kbps and that a fresh playback session returns to Auto. To confirm actual server-side encoding, inspect the Emby playback session or FFmpeg log during the capped phase for `Transcode`, `420000` bps, and video re-encoding.
 
+## Episode resume
+
+On both servers, create a TV Shows library named `CineFerry Episode Library`. Add a series named `CineFerry Episode Test` with two episodes in season 1. Name the second episode `Second Fixture`. You can reuse the sample clip for both episodes. Enable resume at 1% with no minimum duration and reset progress on both episodes before each run.
+
+Set `title` in each fixture to the series name and use fresh simulators. Run either platform with the same fixture format.
+
+```sh
+python3 Tools/ServiceBaseline/run.py /path/to/private-ios-fixtures.json --scenario episode-resume
+python3 Tools/ServiceBaseline/run.py /path/to/private-tv-fixtures.json --platform tvos --scenario episode-resume
+```
+
+The test opens episode 2 from the series, verifies the player identifies it as season 1, episode 2, and stops playback after the timeline advances. It then cold-launches the app, opens the episode from Home, and checks both the episode identity and the resumed position.
+
+The episode resume cases passed for Jellyfin and Emby on iOS 26.1 and tvOS 26.1 simulators.
+
 ## Verified environment
 
 Both cases passed on iOS 26.1 (iPhone 17 Pro simulator) and iOS 27.2 with Jellyfin 12.4.0 and Emby 4.10.2.0. The Emby server reported video re-encoding at a 420 kbps total target. The built iOS app declares a minimum OS of 26.1.

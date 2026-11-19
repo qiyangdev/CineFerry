@@ -68,6 +68,86 @@ final class TVOSServiceBaselineTests: XCTestCase {
     }
 
     @MainActor
+    func testEmbyEpisodeResume() throws {
+        try runEpisodeResume(for: .emby)
+    }
+
+    @MainActor
+    func testJellyfinEpisodeResume() throws {
+        try runEpisodeResume(for: .jellyfin)
+    }
+
+    @MainActor
+    private func runEpisodeResume(for service: Service) throws {
+        let configuration = try Configuration(service: service)
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        let robot = Robot(app: app)
+        app.launch()
+        try signIn(configuration, using: robot)
+
+        _ = robot.media().library("CineFerry Episode Library").item(configuration.title)
+        let secondEpisode = robot.buttons(containing: "Second Fixture").firstMatch
+        robot.reveal(secondEpisode)
+        robot.tap(secondEpisode)
+
+        try startEpisodePlayer(using: robot)
+        let start = try playbackTime(in: robot, atLeast: 1, phase: "Initial episode playback")
+        try assertEpisodeIdentity(in: robot)
+        let advancing = try playbackTime(in: robot, atLeast: start + 8, phase: "Episode playback")
+        let stopped = try closePlayer(
+            for: configuration.title,
+            in: robot,
+            lastObserved: advancing,
+            additionalFocusLabels: ["Second Fixture", L10n.posterAccessibilitySeason(1)]
+        )
+        wait(4)
+        app.terminate()
+        app.launch()
+
+        robot.home()
+        let resumeCard = robot.buttons(containing: "Second Fixture").firstMatch
+        robot.reveal(resumeCard)
+        robot.tap(resumeCard)
+        try startEpisodePlayer(using: robot)
+        let resumed = try playbackTime(in: robot, atLeast: 1, phase: "Cold episode resume")
+        try assertEpisodeIdentity(in: robot)
+        guard resumed >= max(start + 4, stopped - 5), resumed <= stopped + 15 else {
+            throw BaselineFailure("Episode resumed at \(resumed)s after stopping at \(stopped)s.")
+        }
+
+        let final = try playbackTime(in: robot, atLeast: resumed + 3, phase: "Episode resume advancement")
+        _ = try closePlayer(for: configuration.title, in: robot, lastObserved: final)
+        print("BASELINE \(service.rawValue) episode S1:E2 stopped \(stopped)s, cold resume \(resumed) -> \(final)s")
+    }
+
+    @MainActor
+    private func startEpisodePlayer(using robot: Robot) throws {
+        if !timeline(in: robot).waitForExistence(timeout: 3) {
+            let play = robot.buttons(labeled: L10n.play).firstMatch
+            guard play.waitForExistence(timeout: 12) else {
+                throw BaselineFailure("The episode detail did not present a Play button.")
+            }
+
+            robot.tap(play)
+        }
+    }
+
+    @MainActor
+    private func assertEpisodeIdentity(in robot: Robot) throws {
+        let episode = robot.app
+            .staticTexts
+            .matching(
+                NSPredicate(format: "label CONTAINS %@", L10n.seasonAndEpisode(1, 2))
+            )
+            .firstMatch
+        guard episode.waitForExistence(timeout: 6) else {
+            throw BaselineFailure("The player did not identify the item as season 1, episode 2.")
+        }
+    }
+
+    @MainActor
     private func runBaseline(for service: Service) throws {
         let configuration = try Configuration(service: service)
         continueAfterFailure = false
@@ -244,7 +324,12 @@ final class TVOSServiceBaselineTests: XCTestCase {
     }
 
     @MainActor
-    private func closePlayer(for title: String, in robot: Robot, lastObserved: Int) throws -> Int {
+    private func closePlayer(
+        for title: String,
+        in robot: Robot,
+        lastObserved: Int,
+        additionalFocusLabels: [String] = []
+    ) throws -> Int {
         let elapsed = timeline(in: robot)
         if !isVisible(elapsed) {
             XCUIRemote.shared.press(.select)
@@ -270,12 +355,15 @@ final class TVOSServiceBaselineTests: XCTestCase {
         repeat {
             if !isVisible(elapsed),
                let focus = robot.focusedLabel,
-               focus == L10n.play || focus == L10n.home || focus.contains(title) {
+               focus == L10n.play || focus == L10n.home || focus.contains(title) || additionalFocusLabels
+                .contains(where: { focus.contains($0) }) {
                 return stopped
             }
             wait(0.4)
         } while Date() < deadline
-        throw BaselineFailure("Back did not return focus to the fixture or Home after closing the player.")
+        throw BaselineFailure(
+            "Back did not return focus to the fixture or Home after closing the player. Focus: \(robot.focusedLabel ?? "none")."
+        )
     }
 
     @MainActor

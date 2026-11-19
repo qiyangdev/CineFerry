@@ -69,6 +69,86 @@ final class IOSServiceBaselineTests: XCTestCase {
     }
 
     @MainActor
+    func testEmbyEpisodeResume() throws {
+        try runEpisodeResume(for: .emby)
+    }
+
+    @MainActor
+    func testJellyfinEpisodeResume() throws {
+        try runEpisodeResume(for: .jellyfin)
+    }
+
+    @MainActor
+    private func runEpisodeResume(for service: Service) throws {
+        let configuration = try Configuration(service: service)
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        XCUIDevice.shared.orientation = .portrait
+        let robot = Robot(app: app)
+        app.launch()
+        try signIn(configuration, in: app)
+
+        _ = robot.media().library("CineFerry Episode Library").item(configuration.title)
+        let secondEpisode = robot.buttons(containing: "Second Fixture").firstMatch
+        robot.reveal(secondEpisode)
+        robot.tap(secondEpisode)
+
+        try startEpisodePlayer(in: app)
+        let start = try playbackTime(in: app, atLeast: 1, phase: "Initial episode playback")
+        try assertEpisodeIdentity(in: robot)
+        let advancing = try playbackTime(in: app, atLeast: start + 8, phase: "Episode playback")
+        let stopped = try stopPlayer(in: app, fallbackTime: advancing, requiresDetail: false)
+        RunLoop.current.run(until: Date().addingTimeInterval(4))
+        app.terminate()
+        app.launch()
+
+        robot.home()
+        XCTAssertTrue(app.staticTexts[L10n.continue].firstMatch.waitForExistence(timeout: 20))
+        let resumeCard = robot.buttons(containing: "Second Fixture").firstMatch
+        robot.reveal(resumeCard)
+        robot.tap(resumeCard)
+        try startEpisodePlayer(in: app)
+        let resumed = try playbackTime(in: app, atLeast: 1, phase: "Cold episode resume")
+        try assertEpisodeIdentity(in: robot)
+        guard resumed >= max(start + 4, stopped - 5), resumed <= stopped + 15 else {
+            throw PlaybackFailure("Episode resumed at \(resumed)s after stopping at \(stopped)s.")
+        }
+
+        let final = try playbackTime(in: app, atLeast: resumed + 3, phase: "Episode resume advancement")
+        _ = try stopPlayer(in: app, fallbackTime: final, requiresDetail: false)
+        print("BASELINE \(service.rawValue) episode S1:E2 stopped \(stopped)s, cold resume \(resumed) -> \(final)s")
+    }
+
+    @MainActor
+    private func startEpisodePlayer(in app: XCUIApplication) throws {
+        let close = app.buttons["closePlayerButton"].firstMatch
+        if !close.waitForExistence(timeout: 3) {
+            let play = app.buttons[L10n.play].firstMatch
+            guard waitForHittable(play, in: app, timeout: 12) else {
+                throw PlaybackFailure("The episode detail did not present a Play button.")
+            }
+
+            play.tap()
+        }
+        XCTAssertTrue(close.waitForExistence(timeout: 16))
+    }
+
+    @MainActor
+    private func assertEpisodeIdentity(in robot: Robot) throws {
+        showControls(in: robot.app)
+        let episode = robot.app
+            .staticTexts
+            .matching(
+                NSPredicate(format: "label CONTAINS %@", L10n.seasonAndEpisode(1, 2))
+            )
+            .firstMatch
+        guard episode.waitForExistence(timeout: 6) else {
+            throw PlaybackFailure("The player did not identify the item as season 1, episode 2.")
+        }
+    }
+
+    @MainActor
     private func runBaseline(for service: Service) throws {
         let configuration = try Configuration(service: service)
         continueAfterFailure = false
@@ -321,7 +401,7 @@ final class IOSServiceBaselineTests: XCTestCase {
     }
 
     @MainActor
-    private func stopPlayer(in app: XCUIApplication, fallbackTime: Int) throws -> Int {
+    private func stopPlayer(in app: XCUIApplication, fallbackTime: Int, requiresDetail: Bool = true) throws -> Int {
         showControls(in: app)
         let pause = app.buttons[L10n.pause].firstMatch
         if canTap(pause, in: app) {
@@ -338,9 +418,12 @@ final class IOSServiceBaselineTests: XCTestCase {
         try tapCenter(of: close, in: app)
         let video = app.descendants(matching: .any).matching(identifier: "videoSurfaceControlsToggle").firstMatch
         guard close.waitForNonExistence(timeout: 10),
-              video.waitForNonExistence(timeout: 8),
-              waitForHittable(app.buttons[L10n.play].firstMatch, in: app, timeout: 8)
-        else { throw PlaybackFailure("Closing the player did not return to the playable item detail.") }
+              video.waitForNonExistence(timeout: 8)
+        else { throw PlaybackFailure("The player did not close.") }
+
+        if requiresDetail, !waitForHittable(app.buttons[L10n.play].firstMatch, in: app, timeout: 8) {
+            throw PlaybackFailure("Closing the player did not return to the playable item detail.")
+        }
 
         return stopped
     }
