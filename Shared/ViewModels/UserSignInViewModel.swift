@@ -99,7 +99,7 @@ final class UserSignInViewModel: ObservableObject {
     @Published
     private(set) var serverDisclaimer: String? = nil
 
-    private let logger = Logger.swiftfin()
+    private let logger = Logger.cineFerry()
     private var cancellables = Set<AnyCancellable>()
 
     let server: ServerState
@@ -110,6 +110,12 @@ final class UserSignInViewModel: ObservableObject {
 
     @Function(\Action.Cases.getPublicData)
     private func _getPublicData() async throws {
+        #if canImport(EmbyAPI)
+        if server.isEmby {
+            self.publicUsers = try await EmbyServer.publicUsers(at: server.effectiveServerURL)
+            return
+        }
+        #endif
         async let isQuickConnectEnabled = try retrieveIsQuickConnectEnabled()
         async let publicUsers = try retrievePublicUsers()
         async let serverDisclaimer = try retrieveServerDisclaimer()
@@ -128,11 +134,20 @@ final class UserSignInViewModel: ObservableObject {
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .trimmingCharacters(in: .objectReplacement)
 
-        let password = password
+        let normalizedPassword = password
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .trimmingCharacters(in: .objectReplacement)
 
-        let response = try await server.client.signIn(username: username, password: password)
+        let response: AuthenticationResult
+        #if canImport(EmbyAPI)
+        if server.isEmby {
+            response = try await EmbyServer.signIn(at: server, username: username, password: password)
+        } else {
+            response = try await server.client.signIn(username: username, password: normalizedPassword)
+        }
+        #else
+        response = try await server.client.signIn(username: username, password: normalizedPassword)
+        #endif
 
         guard let accessToken = response.accessToken,
               let userData = response.user,
@@ -144,6 +159,8 @@ final class UserSignInViewModel: ObservableObject {
         }
 
         if let existingUser = existingUser(id: id) {
+            guard existingUser.serverID == server.id else { throw ErrorMessage(L10n.connectionServerMismatch) }
+
             events.send(.existingUser(((existingUser, accessToken), userData)))
         } else {
             let newUserState = UserState(

@@ -88,8 +88,8 @@ class Fastfile: LaneFile {
         let device: String
     }
 
-    private let bundleIdentifier = "org.jellyfin.swiftfin"
-    private let xcodeProject = "Swiftfin.xcodeproj"
+    private let bundleIdentifier = "dev.qiyang.mediaclient"
+    private let xcodeProject = "CineFerry.xcodeproj"
     private let sourcePackagesPath = "build/SourcePackages"
 
     private var statusBarTime: String {
@@ -367,8 +367,8 @@ class Fastfile: LaneFile {
         for (runtime, profile, device) in destinations {
             let captureDirectory = root.appendingPathComponent("build/Screenshots/Capture/\(profile)")
             let outputDirectory = tools.appendingPathComponent("Output/\(profile)")
-            let scheme = runtime.platform == "tvOS" ? "Swiftfin tvOS" : "Swiftfin"
-            let testTarget = "Swiftfin \(runtime.platform) Screenshots"
+            let scheme = runtime.platform == "tvOS" ? "CineFerry tvOS" : "CineFerry"
+            let testTarget = "CineFerry \(runtime.platform) Screenshots"
             let isDuo = profile == "iPhoneDuo"
             let duo = Process()
 

@@ -235,7 +235,7 @@ extension BaseItemDto {
     func getNowPlayingImage() async -> UIImage? {
         let content = currentProgram ?? self
 
-        guard let firstImage = await ImagePipeline.Swiftfin.other.loadFirstImage(from: nowPlayingImageSources) else {
+        guard let firstImage = await ImagePipeline.CineFerry.other.loadFirstImage(from: nowPlayingImageSources) else {
             let failedSystemContentView = SystemImageContentView(
                 systemName: systemImage
             )

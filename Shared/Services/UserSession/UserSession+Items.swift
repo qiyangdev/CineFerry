@@ -13,39 +13,55 @@ import JellyfinAPI
 @MainActor
 extension UserSession {
 
+    func makeMediaCatalog() throws -> any MediaCatalog {
+        #if canImport(EmbyAPI)
+        if server.isEmby {
+            return try EmbyMediaCatalog(client: makeEmbyClient(), userID: user.id)
+        }
+        #endif
+        return JellyfinMediaCatalog(client: client, userID: user.id)
+    }
+
+    func catalogSnapshots(
+        _ fetch: (any MediaCatalog) async throws -> MediaCatalogPage
+    ) async throws -> (value: [BaseItemDto], items: [ItemRecord]) {
+        let token = try items.beginRequest()
+        let page = try await fetch(makeMediaCatalog())
+        try items.validate()
+        // Retain merged records while matching the snapshot behavior of the session request.
+        let records = try page.items.compactMap { try items.merge($0, token: token) }
+        return (page.items.map(\.value), records)
+    }
+
+    func request<Value: Decodable & Sendable>(_ request: Request<Value>) async throws -> Response<Value> {
+        #if canImport(EmbyAPI)
+        if server.isEmby {
+            let response = try await client.data(for: request)
+            let (value, data) = try EmbyServer.decode(
+                Value.self,
+                from: response.data,
+                itemID: request.url?.lastPathComponent,
+                operation: request.id
+            )
+            return Response(
+                value: value,
+                data: data,
+                response: response.response,
+                task: response.task,
+                metrics: response.metrics
+            )
+        }
+        #endif
+        return try await client.send(request)
+    }
+
     func send<Value: Decodable & Sendable>(
         _ request: Request<Value>
-    ) async throws -> (value: Value, items: [ItemRecord]) {
-        try await send(request, itemScope: .partial)
-    }
-
-    func getFullItem(_ item: BaseItemDto) async throws -> ItemEntry {
-        try await getFullItem(id: item.id, occurrence: item.playlistItemID)
-    }
-
-    /// Fetches the full item into a retained shared entry
-    func getFullItem(id: String?, occurrence: String? = nil) async throws -> ItemEntry {
-        guard let id, id.nilIfBlank != nil else { throw ItemStore.StoreError.invalidItemID }
-
-        // Don't validate id, plugins may return a different item ID
-        let request = Paths.getItem(itemID: id, userID: user.id)
-        let response = try await send(request, itemScope: .fullItem)
-
-        guard let record = response.items.first, record.value != nil else {
-            throw ItemStore.StoreError.itemUnavailable
-        }
-
-        return ItemEntry(item: record, occurrence: occurrence ?? response.value.playlistItemID)
-    }
-
-    private func send<Value: Decodable & Sendable>(
-        _ request: Request<Value>,
-        itemScope: ItemPatch.Scope
     ) async throws -> (value: Value, items: [ItemRecord]) {
         try items.validate()
         let token = try items.beginRequest()
         let userToken = try users.beginRequest()
-        let response = try await client.send(request)
+        let response = try await self.request(request)
         try Task.checkCancellation()
         try items.validate()
 
@@ -60,7 +76,7 @@ extension UserSession {
         let records: [ItemRecord]
         if let provider = response.value as? any BaseItemPatchProvider {
             let object = try JSONSerialization.jsonObject(with: response.data)
-            let patches = try provider.patches(from: object, scope: itemScope)
+            let patches = try provider.patches(from: object, scope: .partial)
             records = try patches.compactMap { try items.merge($0, token: token) }
         } else {
             records = []
@@ -68,6 +84,23 @@ extension UserSession {
 
         // Keep merged records alive until the caller takes ownership
         return (response.value, records)
+    }
+
+    func getFullItem(_ item: BaseItemDto) async throws -> ItemEntry {
+        try await getFullItem(id: item.id, occurrence: item.playlistItemID)
+    }
+
+    /// Fetches the full item into a retained shared entry.
+    func getFullItem(id: String?, occurrence: String? = nil) async throws -> ItemEntry {
+        guard let id, id.nilIfBlank != nil else { throw ItemStore.StoreError.invalidItemID }
+
+        let token = try items.beginRequest()
+        let patch = try await makeMediaCatalog().item(id: id)
+        guard let record = try items.merge(patch, token: token), record.value != nil else {
+            throw ItemStore.StoreError.itemUnavailable
+        }
+
+        return ItemEntry(item: record, occurrence: occurrence ?? patch.value.playlistItemID)
     }
 
     func send(_ request: Request<Void>) async throws {
@@ -105,7 +138,7 @@ extension UserSession {
         request: @escaping () -> Request<UserItemDataDto>
     ) async throws {
         try await items.mutateUserData(entry.item, field: field, to: value) {
-            let response = try await self.client.send(request())
+            let response = try await self.request(request())
             let object = try JSONSerialization.jsonObject(with: response.data) as? [String: Any] ?? [:]
             return (response.value, Set(object.keys))
         }

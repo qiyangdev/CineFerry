@@ -62,9 +62,9 @@ struct EditLocalServerView: View {
                     }
                 }
             } footer: {
-                if !viewModel.server.isVersionCompatible {
+                if let minimumVersion = viewModel.server.unmetMinimumVersion {
                     Label(
-                        L10n.serverVersionWarning(viewModel.server.client.version.majorMinor.description),
+                        L10n.minimumServerVersionWarning(viewModel.server.serviceName, minimumVersion.description),
                         systemImage: "exclamationmark.circle.fill"
                     )
                     .labelStyle(.sectionFooterWithImage(imageStyle: .orange))

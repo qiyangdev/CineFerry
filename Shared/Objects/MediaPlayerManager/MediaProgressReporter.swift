@@ -20,7 +20,7 @@ final class MediaProgressReporter {
     private let reportQueue: MediaPlaybackReportQueue
 
     private var item: MediaPlayerItem?
-    private let logger = Logger.swiftfin()
+    private let logger = Logger.cineFerry()
     weak var mediaSession: MediaSession?
     private var pendingProgressID: UUID?
     private let timer = PokeIntervalTimer()
@@ -62,9 +62,9 @@ final class MediaProgressReporter {
         info.mediaSourceID = item.mediaSource.id
         info.playSessionID = item.playSessionID
         info.positionTicks = mediaSession?.observedSeconds.ticks
-        info.sessionID = item.playSessionID
+        info.sessionID = userSession.server.isEmby ? nil : item.playSessionID
 
-        enqueue(Paths.reportPlaybackStopped(info))
+        enqueue(Paths.reportPlaybackStopped(info), refreshItemID: userSession.server.isEmby ? info.itemID : nil)
     }
 
     private func report(isStart: Bool = false) {
@@ -78,7 +78,12 @@ final class MediaProgressReporter {
         info.mediaSourceID = item.mediaSource.id
         info.playSessionID = item.playSessionID
         info.positionTicks = mediaSession?.observedSeconds.ticks
-        info.sessionID = item.playSessionID
+        if userSession.server.isEmby {
+            info.canSeek = true
+            info.playMethod = item.mediaSource.transcodingURL != nil ? .transcode : .directStream
+        } else {
+            info.sessionID = item.playSessionID
+        }
         info.subtitleStreamIndex = item.selectedSubtitleStreamIndex ?? -1
 
         let report = PlaybackStateReport(info: info, secondarySubtitleStreamIndex: item.selectedSecondarySubtitleStreamIndex ?? -1)
@@ -96,7 +101,7 @@ final class MediaProgressReporter {
         }.value
     }
 
-    private func enqueue(_ request: Get.Request<Void>, isProgress: Bool = false) {
+    private func enqueue(_ request: Get.Request<Void>, isProgress: Bool = false, refreshItemID: String? = nil) {
         #if DEBUG
         guard Defaults[.sendProgressReports] else { return }
 
@@ -113,6 +118,7 @@ final class MediaProgressReporter {
             progressID = nil
         }
 
+        let userSession = self.userSession
         let client = userSession.client
 
         reportQueue.enqueue { [weak self, logger] in
@@ -129,6 +135,9 @@ final class MediaProgressReporter {
 
             do {
                 _ = try await client.send(request)
+                if let refreshItemID {
+                    _ = try? await userSession.getFullItem(id: refreshItemID)
+                }
             } catch {
                 logger.warning("Unable to report playback: \(error.localizedDescription)")
             }

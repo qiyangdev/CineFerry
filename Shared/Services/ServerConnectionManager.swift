@@ -58,9 +58,9 @@ final class ServerConnectionManager: ObservableObject {
         case unreachable([ServerConnection])
     }
 
-    private static let logger = Logger.swiftfin()
+    private static let logger = Logger.cineFerry()
 
-    private let queue = DispatchQueue(label: "Swiftfin.ServerConnectionMonitor")
+    private let queue = DispatchQueue(label: "CineFerry.ServerConnectionMonitor")
 
     private weak var userSession: UserSession?
     private var monitor: NWPathMonitor?
@@ -72,20 +72,29 @@ final class ServerConnectionManager: ObservableObject {
     static func test(
         connection: ServerConnection,
         accessToken: String? = nil,
-        matchingServerID serverID: String
+        matchingServerID serverID: String,
+        isEmby: Bool = false
     ) async throws -> PublicSystemInfo {
-        let sessionConfiguration = URLSessionConfiguration.swiftfin.copy() as! URLSessionConfiguration
+        #if canImport(EmbyAPI)
+        if isEmby {
+            let info = try await EmbyServer.probe(connection.url)
+            guard info.id == serverID else { throw ErrorMessage(L10n.connectionServerMismatch) }
+
+            return info
+        }
+        #endif
+        let sessionConfiguration = URLSessionConfiguration.cineFerry.copy() as! URLSessionConfiguration
         sessionConfiguration.timeoutIntervalForRequest = 8
         sessionConfiguration.timeoutIntervalForResource = 12
         sessionConfiguration.waitsForConnectivity = false
 
         let client = JellyfinClient(
-            configuration: .swiftfinConfiguration(
+            configuration: .cineFerryConfiguration(
                 url: connection.url,
                 accessToken: accessToken
             ),
             sessionConfiguration: sessionConfiguration,
-            sessionDelegate: URLSessionProxyDelegate(logger: NetworkLogger.swiftfin())
+            sessionDelegate: URLSessionProxyDelegate(logger: NetworkLogger.cineFerry())
         )
 
         let response = try await client.send(Paths.getPublicSystemInfo)
@@ -111,7 +120,8 @@ final class ServerConnectionManager: ObservableObject {
         guard let reachableConnection = await firstReachableConnection(
             in: candidates,
             accessToken: accessToken,
-            serverID: server.id
+            serverID: server.id,
+            isEmby: server.isEmby
         ) else { return .unreachable(candidates) }
 
         if server.activeServerConnection?.id != reachableConnection.id {
@@ -124,7 +134,8 @@ final class ServerConnectionManager: ObservableObject {
     private static func firstReachableConnection(
         in connections: [ServerConnection],
         accessToken: String?,
-        serverID: String
+        serverID: String,
+        isEmby: Bool
     ) async -> ServerConnection? {
         for connection in connections {
             guard !Task.isCancelled else { return nil }
@@ -133,7 +144,8 @@ final class ServerConnectionManager: ObservableObject {
                 _ = try await test(
                     connection: connection,
                     accessToken: accessToken,
-                    matchingServerID: serverID
+                    matchingServerID: serverID,
+                    isEmby: isEmby
                 )
                 return connection
             } catch {

@@ -93,8 +93,8 @@ final class UserImageViewModel: ViewModel {
 
         for width: CGFloat in [60, 120, 150] {
             if let url = user.profileImageSource(client: userSession.client, maxWidth: width).url {
-                await ImagePipeline.Swiftfin.local.removeItem(for: url)
-                await ImagePipeline.Swiftfin.posters.removeItem(for: url)
+                await ImagePipeline.CineFerry.local.removeItem(for: url)
+                await ImagePipeline.CineFerry.posters.removeItem(for: url)
             }
         }
     }

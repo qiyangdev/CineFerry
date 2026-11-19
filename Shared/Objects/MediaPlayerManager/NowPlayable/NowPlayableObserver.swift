@@ -17,7 +17,7 @@ import UIKit
 final class NowPlayableObserver: MediaSessionObserver {
 
     private var isActive = false
-    private let logger = Logger.swiftfin()
+    private let logger = Logger.cineFerry()
     private weak var mediaSession: MediaSession?
     private weak var observedItem: MediaPlayerItem?
     private var ownsAudioSession = false

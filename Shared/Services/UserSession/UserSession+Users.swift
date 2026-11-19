@@ -93,7 +93,7 @@ extension UserSession {
                             _ = try await self.getUser(id: self.user.id)
                         } catch is CancellationError {
                         } catch {
-                            Logger.swiftfin().error("Unable to refresh current user: \(error.localizedDescription)")
+                            Logger.cineFerry().error("Unable to refresh current user: \(error.localizedDescription)")
                         }
                     }
 

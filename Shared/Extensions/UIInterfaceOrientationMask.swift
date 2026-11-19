@@ -8,7 +8,7 @@
 
 import UIKit
 #if os(tvOS)
-import SwiftfinMacros
+import CineFerryMacros
 #endif
 
 #if os(iOS)

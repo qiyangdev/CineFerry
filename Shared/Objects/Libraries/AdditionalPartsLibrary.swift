@@ -21,7 +21,7 @@ struct AdditionalPartsLibrary: BaseItemKindLibrary {
         pageState: LibraryPageState
     ) async throws -> [ItemPatch] {
         let request = Paths.getAdditionalPart(itemID: itemID)
-        let response = try await pageState.userSession.client.send(request)
+        let response = try await pageState.userSession.request(request)
 
         return try pageState.items(from: response)
     }

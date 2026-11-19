@@ -32,7 +32,7 @@ extension ItemActionButtons {
         @State
         private var error: Error?
 
-        private let logger = Logger.swiftfin()
+        private let logger = Logger.cineFerry()
 
         private var externalTrailers: [NamedURL] {
             provider.item.remoteTrailers ?? []

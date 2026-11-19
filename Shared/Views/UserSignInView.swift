@@ -208,7 +208,7 @@ struct UserSignInView: View {
             .disabled(username.isEmpty)
         }
 
-        if user == nil, viewModel.isQuickConnectEnabled {
+        if user == nil, viewModel.server.supportsQuickConnect, viewModel.isQuickConnectEnabled {
             Section {
                 Button {
                     router.route(

@@ -26,7 +26,7 @@ struct UserProfileHeroImage: View {
     var user: UserDto
 
     let source: ImageSource
-    var pipeline: ImagePipeline = .Swiftfin.posters
+    var pipeline: ImagePipeline = .CineFerry.posters
     let onUpdate: () -> Void
     let onDelete: () -> Void
 
@@ -41,7 +41,7 @@ struct UserProfileHeroImage: View {
                         UserProfileImage(
                             userID: user.id,
                             source: source,
-                            pipeline: userSession?.user.id == user.id ? .Swiftfin.local : .Swiftfin.posters
+                            pipeline: userSession?.user.id == user.id ? .CineFerry.local : .CineFerry.posters
                         )
                         .frame(width: 150, height: 150)
 

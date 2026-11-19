@@ -29,7 +29,7 @@ struct RecentlyAddedLibrary: BaseItemKindLibrary {
         parameters.userID = pageState.userSession.user.id
 
         let request = Paths.getItems(parameters: parameters)
-        let response = try await pageState.userSession.client.send(request)
+        let response = try await pageState.userSession.request(request)
 
         return try pageState.items(from: response)
     }

@@ -60,7 +60,7 @@ struct AppSettingsView: View {
     @ContentBuilder
     var body: some View {
         Form(image: .jellyfinBlobBlue) {
-            Section(L10n.swiftfin) {
+            Section(L10n.cineFerry) {
                 ChevronButton(L10n.aboutApp) {
                     router.route(to: .aboutApp)
                 }

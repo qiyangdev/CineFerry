@@ -82,7 +82,7 @@ struct SettingsView: View {
                 }
 
                 #if os(iOS)
-                if userSession.userData.policy?.isAdministrator == true {
+                if userSession.server.supportsServerAdministration, userSession.userData.policy?.isAdministrator == true {
                     ChevronButton(L10n.dashboard) {
                         router.route(to: .adminDashboard)
                     }

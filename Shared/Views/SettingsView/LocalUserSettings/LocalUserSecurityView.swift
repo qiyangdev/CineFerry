@@ -155,7 +155,7 @@ struct LocalUserSecurityView: View {
             )
             #endif
         } footer: {
-            Text(L10n.additionalSecurityAccessDescription)
+            Text(L10n.localSecurityAccessDescription)
         } learnMore: {
             LabeledContent(
                 LocalUserAccessPolicy.none.displayTitle,

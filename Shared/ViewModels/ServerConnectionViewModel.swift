@@ -129,7 +129,8 @@ final class ServerConnectionViewModel: ViewModel {
             _ = try await ServerConnectionManager.test(
                 connection: connection,
                 accessToken: userSession?.user.accessToken,
-                matchingServerID: server.id
+                matchingServerID: server.id,
+                isEmby: server.isEmby
             )
 
             let state = ServerConnection.TestState.success

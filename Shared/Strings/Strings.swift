@@ -44,8 +44,6 @@ internal enum L10n {
   internal static let addAccessTag = L10n.tr("Localizable", "addAccessTag", fallback: "Add access tag")
   /// Additional parts
   internal static let additionalParts = L10n.tr("Localizable", "additionalParts", fallback: "Additional parts")
-  /// Additional security access for users signed in to this device. This does not change any Jellyfin server user settings.
-  internal static let additionalSecurityAccessDescription = L10n.tr("Localizable", "additionalSecurityAccessDescription", fallback: "Additional security access for users signed in to this device. This does not change any Jellyfin server user settings.")
   /// Add repository
   internal static let addRepository = L10n.tr("Localizable", "addRepository", fallback: "Add repository")
   /// Add server
@@ -406,8 +404,8 @@ internal enum L10n {
   internal static let connections = L10n.tr("Localizable", "connections", fallback: "Connections")
   /// This connection does not point to the current server.
   internal static let connectionServerMismatch = L10n.tr("Localizable", "connectionServerMismatch", fallback: "This connection does not point to the current server.")
-  /// Connect to a Jellyfin server to get started
-  internal static let connectToJellyfinServerStart = L10n.tr("Localizable", "connectToJellyfinServerStart", fallback: "Connect to a Jellyfin server to get started")
+  /// Connect to a media server to get started.
+  internal static let connectToMediaServerStart = L10n.tr("Localizable", "connectToMediaServerStart", fallback: "Connect to a media server to get started.")
   /// Connect to server
   internal static let connectToServer = L10n.tr("Localizable", "connectToServer", fallback: "Connect to server")
   /// Container
@@ -464,10 +462,10 @@ internal enum L10n {
   internal static let customConnectionsDescription = L10n.tr("Localizable", "customConnectionsDescription", fallback: "Manually set the maximum number of connections a user can have to the server.")
   /// Allows advanced customization of device profiles for native playback. Incorrect settings may affect playback.
   internal static let customDescription = L10n.tr("Localizable", "customDescription", fallback: "Allows advanced customization of device profiles for native playback. Incorrect settings may affect playback.")
-  /// The custom device profiles will be added to the default Swiftfin device profiles.
-  internal static let customDeviceProfileAdd = L10n.tr("Localizable", "customDeviceProfileAdd", fallback: "The custom device profiles will be added to the default Swiftfin device profiles.")
-  /// The custom device profiles will replace the default Swiftfin device profiles.
-  internal static let customDeviceProfileReplace = L10n.tr("Localizable", "customDeviceProfileReplace", fallback: "The custom device profiles will replace the default Swiftfin device profiles.")
+  /// The custom device profiles will be added to the default CineFerry device profiles.
+  internal static let customDeviceProfileAdd = L10n.tr("Localizable", "customDeviceProfileAdd", fallback: "The custom device profiles will be added to the default CineFerry device profiles.")
+  /// The custom device profiles will replace the default CineFerry device profiles.
+  internal static let customDeviceProfileReplace = L10n.tr("Localizable", "customDeviceProfileReplace", fallback: "The custom device profiles will replace the default CineFerry device profiles.")
   /// Manually set the number of failed login attempts allowed before locking the user.
   internal static let customFailedLoginDescription = L10n.tr("Localizable", "customFailedLoginDescription", fallback: "Manually set the number of failed login attempts allowed before locking the user.")
   /// Custom failed logins
@@ -1006,6 +1004,8 @@ internal enum L10n {
   internal static let liveTVRecordingManagement = L10n.tr("Localizable", "liveTVRecordingManagement", fallback: "Live TV recording management")
   /// Local
   internal static let local = L10n.tr("Localizable", "local", fallback: "Local")
+  /// Additional security for users signed in on this device. Server account settings are unaffected.
+  internal static let localSecurityAccessDescription = L10n.tr("Localizable", "localSecurityAccessDescription", fallback: "Additional security for users signed in on this device. Server account settings are unaffected.")
   /// Local servers
   internal static let localServers = L10n.tr("Localizable", "localServers", fallback: "Local servers")
   /// Location
@@ -1098,6 +1098,10 @@ internal enum L10n {
   internal static let metadataRefreshDescription = L10n.tr("Localizable", "metadataRefreshDescription", fallback: "Metadata is refreshed based on settings and internet services that are enabled in Jellyfin.")
   /// Method
   internal static let method = L10n.tr("Localizable", "method", fallback: "Method")
+  /// CineFerry requires %@ version %@ or later.
+  internal static func minimumServerVersionWarning(_ p1: Any, _ p2: Any) -> String {
+    return L10n.tr("Localizable", "minimumServerVersionWarning", String(describing: p1), String(describing: p2), fallback: "CineFerry requires %@ version %@ or later.")
+  }
   /// Minutes
   internal static let minutes = L10n.tr("Localizable", "minutes", fallback: "Minutes")
   /// Minutes after
@@ -1246,8 +1250,6 @@ internal enum L10n {
   internal static let password = L10n.tr("Localizable", "password", fallback: "Password")
   /// User password has been changed.
   internal static let passwordChangedMessage = L10n.tr("Localizable", "passwordChangedMessage", fallback: "User password has been changed.")
-  /// Changes the Jellyfin server user password. This does not change any Swiftfin settings.
-  internal static let passwordChangeWarning = L10n.tr("Localizable", "passwordChangeWarning", fallback: "Changes the Jellyfin server user password. This does not change any Swiftfin settings.")
   /// New passwords do not match.
   internal static let passwordsDoNotMatch = L10n.tr("Localizable", "passwordsDoNotMatch", fallback: "New passwords do not match.")
   /// Path
@@ -1268,8 +1270,8 @@ internal enum L10n {
   }
   /// Permissions
   internal static let permissions = L10n.tr("Localizable", "permissions", fallback: "Permissions")
-  /// Manage additional Swiftfin settings in the Settings app.
-  internal static let permissionsSettingsAppFooter = L10n.tr("Localizable", "permissionsSettingsAppFooter", fallback: "Manage additional Swiftfin settings in the Settings app.")
+  /// Manage additional CineFerry settings in the Settings app.
+  internal static let permissionsSettingsAppFooter = L10n.tr("Localizable", "permissionsSettingsAppFooter", fallback: "Manage additional CineFerry settings in the Settings app.")
   /// Person
   internal static let person = L10n.tr("Localizable", "person", fallback: "Person")
   /// Photo
@@ -1568,8 +1570,8 @@ internal enum L10n {
   internal static let resetFilterFooter = L10n.tr("Localizable", "resetFilterFooter", fallback: "Reset the filter values to none.")
   /// Reset settings
   internal static let resetSettings = L10n.tr("Localizable", "resetSettings", fallback: "Reset settings")
-  /// Reset Swiftfin user settings.
-  internal static let resetSettingsDescription = L10n.tr("Localizable", "resetSettingsDescription", fallback: "Reset Swiftfin user settings.")
+  /// Reset CineFerry user settings.
+  internal static let resetSettingsDescription = L10n.tr("Localizable", "resetSettingsDescription", fallback: "Reset CineFerry user settings.")
   /// Are you sure you want to reset all user settings?
   internal static let resetSettingsMessage = L10n.tr("Localizable", "resetSettingsMessage", fallback: "Are you sure you want to reset all user settings?")
   /// Resolution
@@ -1694,12 +1696,10 @@ internal enum L10n {
   internal static let server = L10n.tr("Localizable", "server", fallback: "Server")
   /// Server logs
   internal static let serverLogs = L10n.tr("Localizable", "serverLogs", fallback: "Server logs")
+  /// Changes the server account password. Your CineFerry settings are unaffected.
+  internal static let serverPasswordChangeWarning = L10n.tr("Localizable", "serverPasswordChangeWarning", fallback: "Changes the server account password. Your CineFerry settings are unaffected.")
   /// Servers
   internal static let servers = L10n.tr("Localizable", "servers", fallback: "Servers")
-  /// Swiftfin requires Jellyfin version %@ or higher.
-  internal static func serverVersionWarning(_ p1: Any) -> String {
-    return L10n.tr("Localizable", "serverVersionWarning", String(describing: p1), fallback: "Swiftfin requires Jellyfin version %@ or higher.")
-  }
   /// Session
   internal static let session = L10n.tr("Localizable", "session", fallback: "Session")
   /// Sessions
@@ -1744,12 +1744,12 @@ internal enum L10n {
   }
   /// Sign out on background
   internal static let signoutBackground = L10n.tr("Localizable", "signoutBackground", fallback: "Sign out on background")
-  /// Signs out the last user when Swiftfin has been in the background without media playback after some time.
-  internal static let signoutBackgroundFooter = L10n.tr("Localizable", "signoutBackgroundFooter", fallback: "Signs out the last user when Swiftfin has been in the background without media playback after some time.")
+  /// Signs out the last user when CineFerry has been in the background without media playback after some time.
+  internal static let signoutBackgroundFooter = L10n.tr("Localizable", "signoutBackgroundFooter", fallback: "Signs out the last user when CineFerry has been in the background without media playback after some time.")
   /// Sign out on close
   internal static let signoutClose = L10n.tr("Localizable", "signoutClose", fallback: "Sign out on close")
-  /// Signs out the last user when Swiftfin has been force closed.
-  internal static let signoutCloseFooter = L10n.tr("Localizable", "signoutCloseFooter", fallback: "Signs out the last user when Swiftfin has been force closed.")
+  /// Signs out the last user when CineFerry has been force closed.
+  internal static let signoutCloseFooter = L10n.tr("Localizable", "signoutCloseFooter", fallback: "Signs out the last user when CineFerry has been force closed.")
   /// Simple
   internal static let simple = L10n.tr("Localizable", "simple", fallback: "Simple")
   /// Size

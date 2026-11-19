@@ -33,7 +33,7 @@ extension BaseItemDto {
               itemID.isNotEmpty,
               let tag = tag ?? (itemID == id ? imageTag : nil),
               tag.isNotEmpty,
-              let client = Container.shared.currentUserSession()?.client
+              let session = Container.shared.currentUserSession()
         else { return nil }
 
         // TODO: put into environment?
@@ -53,7 +53,7 @@ extension BaseItemDto {
             parameters: parameters
         )
 
-        guard let url = client.url(with: request) else { return nil }
+        guard let url = session.client.url(with: request, queryAPIKey: session.server.isEmby) else { return nil }
 
         let blurHashes = itemID == id && type != .logo ? imageBlurHashes?[type] : nil
 

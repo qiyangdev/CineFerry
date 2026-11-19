@@ -110,16 +110,16 @@ final class SearchViewModel: ViewModel {
     private func _getSuggestions() async throws {
         await filterViewModel.getQueryFilters()
 
-        var parameters = Paths.GetItemsParameters()
-        parameters.fields = PosterSubtitleField.itemFields
-        parameters.includeItemTypes = [.movie, .series]
-        parameters.isRecursive = true
-        parameters.limit = 10
-        parameters.sortBy = [ItemSortBy.random]
+        var query = MediaCatalogQuery()
+        query.fields = PosterSubtitleField.itemFields.map(\.rawValue)
+        query.itemTypes = [BaseItemKind.movie.rawValue, BaseItemKind.series.rawValue]
+        query.recursive = true
+        query.limit = 10
+        query.sortBy = [ItemSortBy.random.rawValue]
 
-        let request = Paths.getItems(parameters: parameters)
-        let response = try await send(request)
-
-        self.suggestions = response.value.items ?? []
+        let response = try await requireUserSession().catalogSnapshots {
+            try await $0.items(matching: query)
+        }
+        self.suggestions = response.value
     }
 }
