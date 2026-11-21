@@ -118,7 +118,7 @@ extension BaseItemKind {
         case .aggregateFolder:
             L10n.aggregateFolders
         case .audio:
-            L10n.audio
+            L10n.tracks
         case .audioBook:
             L10n.audioBooks
         case .basePluginFolder:

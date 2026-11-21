@@ -38,6 +38,8 @@ struct SearchContentGroupProvider: ContentGroupProvider {
                 .video,
                 .liveTvProgram,
                 .tvChannel,
+                .audio,
+                .musicAlbum,
                 .musicArtist,
             ]
         )

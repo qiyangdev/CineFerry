@@ -157,7 +157,7 @@ extension BaseItemDto {
         guard !isMissing else { return false }
 
         return switch type {
-        case .series, .season, .boxSet, .collectionFolder, .userView, .folder:
+        case .series, .season, .boxSet, .collectionFolder, .userView, .folder, .musicAlbum, .musicArtist:
             false
         default:
             true
@@ -527,7 +527,7 @@ extension BaseItemDto {
 
         switch type {
         case .audio, .audioBook, .book, .channel, .channelFolderItem, .episode,
-             .movie, .liveTvChannel, .liveTvProgram, .musicAlbum, .musicArtist, .musicVideo, .playlist,
+             .movie, .liveTvChannel, .liveTvProgram, .musicVideo, .playlist,
              .program, .recording, .season, .series, .trailer, .tvChannel, .tvProgram, .video:
             return true
         default:

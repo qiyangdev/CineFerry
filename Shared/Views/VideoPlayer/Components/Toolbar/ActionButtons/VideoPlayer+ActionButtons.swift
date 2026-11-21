@@ -42,7 +42,7 @@ extension VideoPlayer.PlaybackControls.Toolbar {
             var filteredButtons = rawButtons
 
             #if os(iOS)
-            if !isChromecastEnabled {
+            if !isChromecastEnabled || mediaSession.item.type == .audio {
                 filteredButtons.removeAll(equalTo: .playbackDestination)
             }
             #elseif os(tvOS)
@@ -50,6 +50,10 @@ extension VideoPlayer.PlaybackControls.Toolbar {
             #endif
             if mediaSession.isRemotePlayback {
                 filteredButtons.removeAll { $0 == .aspectFill || $0 == .pictureInPicture }
+            }
+
+            if mediaSession.item.type == .audio {
+                filteredButtons.removeAll { $0 == .aspectFill || $0 == .pictureInPicture || $0 == .playbackSettings }
             }
 
             if mediaSession.playbackItem?.audioStreams.isEmpty == true {

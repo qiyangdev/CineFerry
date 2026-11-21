@@ -199,11 +199,21 @@ final class ItemContentGroupProvider: ViewModel, ContentGroupProvider {
                 )
             }
 
+        case .musicAlbum:
+            PosterGroup(
+                id: "album-tracks",
+                library: ItemLibrary(
+                    parent: item,
+                    filters: .init(itemTypes: [.audio], sortBy: [.parentIndexNumber, .indexNumber, .sortName])
+                ),
+                displayTitle: L10n.tracks,
+                posterDisplayType: .square
+            )
+
         case .boxSet, .person, .musicArtist:
+            let relatedTypes = BaseItemKind.supportedCases.appending([.episode, .person])
             try await ItemTypeContentGroupProvider(
-                itemTypes: BaseItemKind.supportedCases
-                    .appending(.episode)
-                    .appending(.person),
+                itemTypes: item.type == .musicArtist ? [.musicAlbum] + relatedTypes : relatedTypes,
                 parent: item
             )
             .makeGroups(environment: .default)

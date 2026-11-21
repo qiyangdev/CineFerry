@@ -51,6 +51,9 @@ extension BaseItemDto: LibraryElement {
                 in: namespace
             )
 
+        case .audio where presentPlayButton && !isMissing:
+            PlayMediaAction { router.route(to: $0, in: namespace) }(intent: PlaybackIntent(item: self))
+
         default:
             router.route(to: .item(item: self), in: namespace)
         }

@@ -40,6 +40,10 @@ enum MediaPlayerItemResolver {
         let storedItem = try await userSession.getFullItem(initialItem)
         guard var item = storedItem.value, intent.entry.value != nil else { throw ItemStore.StoreError.itemUnavailable }
 
+        if item.type == .audio, item.mediaType == nil {
+            item.mediaType = .audio
+        }
+
         var configuration = intent.configuration
         guard let initialMediaSource = configuration.mediaSource(in: item) else {
             throw ErrorMessage("Unable to find media source for item")
@@ -280,9 +284,10 @@ enum MediaPlayerItemResolver {
         }
 
         #if canImport(EmbyAPI)
-        if userSession.server.isEmby, item.mediaType == .video {
-            return try EmbyServer.videoURL(
+        if userSession.server.isEmby, item.mediaType == .video || item.mediaType == .audio {
+            return try EmbyServer.streamURL(
                 itemID: itemID,
+                isAudio: item.mediaType == .audio,
                 source: mediaSource,
                 playSessionID: playSessionID,
                 baseURL: userSession.server.effectiveServerURL,

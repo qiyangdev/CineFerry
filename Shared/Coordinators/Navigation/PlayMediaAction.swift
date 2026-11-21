@@ -10,7 +10,6 @@ import FactoryKit
 import SwiftUI
 
 // TODO: will need additional logic for:
-//       - audio playback
 //       - remote playback control
 
 @MainActor

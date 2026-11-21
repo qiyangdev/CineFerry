@@ -8,6 +8,7 @@
 
 import Defaults
 import FactoryKit
+import JellyfinAPI
 import SwiftUI
 
 struct VideoPlayer: View {
@@ -52,6 +53,10 @@ struct VideoPlayer: View {
             mediaSession: mediaSession,
             videoSize: { (mediaSession.player as? any VideoMediaPlayer)?.videoState.videoSize ?? .zero }
         ) { videoLayout in
+            if mediaSession.item.type == .audio {
+                return AudioArtwork(item: mediaSession.item).eraseToAnyView()
+            }
+
             if let player = mediaSession.player as? any VideoMediaPlayer {
                 return player.videoPlayerBody(layout: videoLayout)
                     .eraseToAnyView()
@@ -71,7 +76,8 @@ struct VideoPlayer: View {
         }
         .onAppear {
             if mediaSession.player == nil, mediaSession.state != .stopped {
-                mediaSession.attach(player: Defaults[.VideoPlayer.mediaPlayerType].makePlayer())
+                let playerType: MediaPlayerType = mediaSession.item.type == .audio ? .avPlayer : Defaults[.VideoPlayer.mediaPlayerType]
+                mediaSession.attach(player: playerType.makePlayer())
             }
         }
         .prefersStatusBarHidden(UIDevice.isPad || !viewState.isPresentingControls)
@@ -119,5 +125,23 @@ struct VideoPlayer: View {
         .ignoresSafeArea()
         .persistentSystemOverlays(.hidden)
         .toolbar(.hidden, for: .navigationBar)
+    }
+}
+
+private struct AudioArtwork: View {
+
+    let item: BaseItemDto
+
+    @ContentBuilder
+    var body: some View {
+        GeometryReader { geometry in
+            let side = min(geometry.size.width, geometry.size.height) * 0.55
+
+            PosterImage(item: item, type: .square, size: .medium)
+                .frame(width: side, height: side)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .background(.black)
+        .accessibilityHidden(true)
     }
 }

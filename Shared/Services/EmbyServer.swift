@@ -134,8 +134,9 @@ enum EmbyServer {
         return try convert(response.ok.body.json, to: PlaybackInfoResponse.self)
     }
 
-    static func videoURL(
+    static func streamURL(
         itemID: String,
+        isAudio: Bool,
         source: MediaSourceInfo,
         playSessionID: String,
         baseURL: URL,
@@ -166,7 +167,9 @@ enum EmbyServer {
             guard let id = source.id,
                   source.isSupportsDirectPlay == true || source.isSupportsDirectStream == true,
                   let url = URLComponents(
-                      url: baseURL.appending(component: "Videos").appending(component: itemID).appending(component: "stream"),
+                      url: baseURL.appending(component: isAudio ? "Audio" : "Videos")
+                          .appending(component: itemID)
+                          .appending(component: "stream"),
                       resolvingAgainstBaseURL: false
                   )
             else { throw ErrorMessage(L10n.unknownError) }
